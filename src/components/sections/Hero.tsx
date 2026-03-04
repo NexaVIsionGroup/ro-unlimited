@@ -132,14 +132,9 @@ export default function Hero() {
         gsap.set(ctaRef.current.children, { opacity: 0 });
       }
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top 75%',
-          toggleActions: 'play none none none',
-          id: 'hero-mobile',
-        },
-      });
+      // Hero is always in-viewport on load — no ScrollTrigger needed.
+      // Just play after a short delay so the gsap.set() → fromTo() don't race.
+      const tl = gsap.timeline({ delay: 0.3 });
 
       // Badge slides down
       tl.fromTo(badgeRef.current,
