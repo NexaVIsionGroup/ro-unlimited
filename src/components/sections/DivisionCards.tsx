@@ -58,7 +58,7 @@ export default function DivisionCards() {
   }, { scope: sectionRef });
 
   return (
-    <div ref={spacerRef} className="relative z-[30] [height:200vh] lg:[height:300vh]">
+    <div ref={spacerRef} className="relative z-[40] [height:200vh] lg:[height:300vh]">
       <section
         ref={sectionRef}
         className="sticky top-0 h-screen overflow-hidden bg-ro-black"

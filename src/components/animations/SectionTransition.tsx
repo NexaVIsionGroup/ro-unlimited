@@ -8,20 +8,22 @@ interface SectionTransitionProps {
   label?: string;
   /** Show welding spark bursts at endpoints */
   sparks?: boolean;
+  /** Z-index for the sticky gate (must sit between adjacent sections) */
+  zIndex?: number;
   className?: string;
 }
 
 /**
- * SectionTransition — I-beam structural connector between sections.
+ * SectionTransition — Full-screen sticky I-beam gate between floors.
  *
- * Scroll-triggered (not pinned). Beam drops from above with bounce,
- * label stamps in, welding sparks burst at both endpoints.
- *
- * Uses fromTo() for every tween. useGSAP for auto-cleanup.
+ * Locks in place for ~50vh of scroll. I-beam drops from above with bounce,
+ * label stamps in, welding sparks burst at both endpoints. Gate scrolls
+ * away to reveal the next floor underneath.
  */
 export default function SectionTransition({
   label,
   sparks = false,
+  zIndex = 35,
   className = '',
 }: SectionTransitionProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -46,9 +48,9 @@ export default function SectionTransition({
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: wrapperRef.current,
-        start: 'top 85%',
+        start: 'top 60%',
         toggleActions: 'play none none none',
-        id: label ? `transition-${label.replace(/\s/g, '-').toLowerCase()}` : 'section-transition',
+        id: label ? `gate-${label.replace(/\s/g, '-').toLowerCase()}` : 'section-gate',
       },
     });
 
@@ -92,77 +94,94 @@ export default function SectionTransition({
 
   return (
     <div
-      ref={wrapperRef}
-      className={`relative py-4 sm:py-6 overflow-hidden ${className}`}
+      className={`relative [height:150vh] ${className}`}
+      style={{ zIndex }}
     >
-      {/* I-Beam */}
       <div
-        ref={beamRef}
-        className="relative w-full"
-        style={{ height: 40 }}
+        ref={wrapperRef}
+        className="sticky top-0 h-screen bg-ro-black flex items-center justify-center overflow-hidden"
       >
-        <img
-          src="/images/svg/i-beam.svg"
-          alt=""
-          className="w-full h-full object-cover"
+        {/* Blueprint grid background — subtle */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `url('/images/svg/blueprint-grid.svg')`,
+            backgroundSize: '80px 80px',
+            backgroundRepeat: 'repeat',
+            opacity: 0.04,
+          }}
           aria-hidden="true"
         />
 
-        {/* Stamped label */}
-        {label && (
-          <span
-            ref={labelRef}
-            className="absolute inset-0 flex items-center justify-center font-heading text-xs sm:text-sm tracking-[0.3em] uppercase text-ro-black/60"
-            style={{ textShadow: '0 0 4px rgba(201,168,76,0.3)' }}
+        {/* I-Beam — centered */}
+        <div
+          ref={beamRef}
+          className="relative w-[85%] max-w-lg"
+          style={{ height: 40 }}
+        >
+          <img
+            src="/images/svg/i-beam.svg"
+            alt=""
+            className="w-full h-full object-cover"
+            aria-hidden="true"
+          />
+
+          {/* Stamped label */}
+          {label && (
+            <span
+              ref={labelRef}
+              className="absolute inset-0 flex items-center justify-center font-heading text-xs sm:text-sm tracking-[0.3em] uppercase text-ro-black/60"
+              style={{ textShadow: '0 0 4px rgba(201,168,76,0.3)' }}
+            >
+              {label}
+            </span>
+          )}
+        </div>
+
+        {/* Welding sparks — left endpoint */}
+        {sparks && (
+          <div
+            ref={sparkLeftRef}
+            className="absolute left-[7.5%] sm:left-[15%] top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ width: 30, height: 30 }}
           >
-            {label}
-          </span>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={`l-${i}`}
+                className="spark-dot absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{
+                  width: 2 + Math.random() * 2,
+                  height: 2 + Math.random() * 2,
+                  background: i % 3 === 0 ? '#FFFFFF' : i % 3 === 1 ? '#F5E6A3' : '#C9A84C',
+                  boxShadow: '0 0 4px rgba(201,168,76,0.5)',
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Welding sparks — right endpoint */}
+        {sparks && (
+          <div
+            ref={sparkRightRef}
+            className="absolute right-[7.5%] sm:right-[15%] top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ width: 30, height: 30 }}
+          >
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={`r-${i}`}
+                className="spark-dot absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                style={{
+                  width: 2 + Math.random() * 2,
+                  height: 2 + Math.random() * 2,
+                  background: i % 3 === 0 ? '#FFFFFF' : i % 3 === 1 ? '#F5E6A3' : '#C9A84C',
+                  boxShadow: '0 0 4px rgba(201,168,76,0.5)',
+                }}
+              />
+            ))}
+          </div>
         )}
       </div>
-
-      {/* Welding sparks — left endpoint */}
-      {sparks && (
-        <div
-          ref={sparkLeftRef}
-          className="absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none"
-          style={{ width: 30, height: 30 }}
-        >
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={`l-${i}`}
-              className="spark-dot absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{
-                width: 2 + Math.random() * 2,
-                height: 2 + Math.random() * 2,
-                background: i % 3 === 0 ? '#FFFFFF' : i % 3 === 1 ? '#F5E6A3' : '#C9A84C',
-                boxShadow: '0 0 4px rgba(201,168,76,0.5)',
-              }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Welding sparks — right endpoint */}
-      {sparks && (
-        <div
-          ref={sparkRightRef}
-          className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none"
-          style={{ width: 30, height: 30 }}
-        >
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={`r-${i}`}
-              className="spark-dot absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{
-                width: 2 + Math.random() * 2,
-                height: 2 + Math.random() * 2,
-                background: i % 3 === 0 ? '#FFFFFF' : i % 3 === 1 ? '#F5E6A3' : '#C9A84C',
-                boxShadow: '0 0 4px rgba(201,168,76,0.5)',
-              }}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
