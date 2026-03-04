@@ -12,7 +12,7 @@ export default function ConstructionCTA() {
   useEffect(() => { setMounted(true); }, []);
 
   const ctaContent = (
-    <div className="text-center p-8 sm:p-12 bg-ro-black/80 border border-ro-gold/20 backdrop-blur-sm relative">
+    <div className="text-center p-8 sm:p-12 bg-ro-black/90 lg:bg-ro-black/80 border border-ro-gold/20 lg:backdrop-blur-sm relative">
       <div className="absolute top-0 left-0 right-0 h-1 caution-stripe opacity-30" />
       <span className="text-ro-gold text-xs font-mono tracking-[0.3em] uppercase mb-6 block">Ready to Build?</span>
       <h2 className="text-ro-white font-heading text-3xl sm:text-4xl lg:text-5xl tracking-tight uppercase mb-6">

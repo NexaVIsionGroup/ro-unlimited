@@ -275,23 +275,23 @@ export default function WhyRO() {
               <div
                 key={reason.title}
                 ref={el => { cardRefs.current[index] = el; }}
-                className="relative p-4 sm:p-6 lg:p-8 border border-ro-gray-800 bg-ro-black/60 backdrop-blur-sm"
+                className="relative p-4 sm:p-6 lg:p-8 border border-ro-gray-800 bg-ro-black/80 lg:bg-ro-black/60 lg:backdrop-blur-sm"
               >
                 {/* Corner bolt accents */}
                 <div
-                  className="reason-bolt absolute top-2 left-2 w-1.5 h-1.5 rounded-full"
+                  className="reason-bolt absolute top-2 left-2 w-1.5 h-1.5 rounded-full hidden lg:block"
                   style={{ background: 'radial-gradient(circle, #D4B965, #8A7233)', boxShadow: '0 0 3px rgba(201,168,76,0.3)' }}
                 />
                 <div
-                  className="reason-bolt absolute top-2 right-2 w-1.5 h-1.5 rounded-full"
+                  className="reason-bolt absolute top-2 right-2 w-1.5 h-1.5 rounded-full hidden lg:block"
                   style={{ background: 'radial-gradient(circle, #D4B965, #8A7233)', boxShadow: '0 0 3px rgba(201,168,76,0.3)' }}
                 />
                 <div
-                  className="reason-bolt absolute bottom-2 left-2 w-1.5 h-1.5 rounded-full"
+                  className="reason-bolt absolute bottom-2 left-2 w-1.5 h-1.5 rounded-full hidden lg:block"
                   style={{ background: 'radial-gradient(circle, #D4B965, #8A7233)', boxShadow: '0 0 3px rgba(201,168,76,0.3)' }}
                 />
                 <div
-                  className="reason-bolt absolute bottom-2 right-2 w-1.5 h-1.5 rounded-full"
+                  className="reason-bolt absolute bottom-2 right-2 w-1.5 h-1.5 rounded-full hidden lg:block"
                   style={{ background: 'radial-gradient(circle, #D4B965, #8A7233)', boxShadow: '0 0 3px rgba(201,168,76,0.3)' }}
                 />
 

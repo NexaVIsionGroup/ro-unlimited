@@ -166,23 +166,10 @@ export default function DivisionCards() {
         }
       }
 
-      // Each card: simple fade+rise. No border draw, no bolt spin.
+      // Each card: simple fade+rise. SVG borders + bolts hidden on mobile via CSS.
       const allCards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
       allCards.forEach((card, i) => {
         gsap.set(card, { opacity: 0 });
-
-        // Pre-set SVG border rects so they show immediately when card fades in
-        const rect = card.querySelector('.card-border-rect') as SVGRectElement | null;
-        const svg = card.querySelector('.card-border-svg') as SVGSVGElement | null;
-        if (rect && svg) {
-          const { width, height } = card.getBoundingClientRect();
-          svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-          rect.setAttribute('width', String(width - 2));
-          rect.setAttribute('height', String(height - 2));
-          const perimeter = 2 * (width - 2 + height - 2);
-          rect.style.strokeDasharray = String(perimeter);
-          rect.style.strokeDashoffset = '0'; // Already drawn — no animation
-        }
 
         // Simple fade+rise for entire card
         gsap.fromTo(card,
@@ -241,11 +228,12 @@ export default function DivisionCards() {
               >
                 <Link
                   href={division.href}
-                  className="relative w-full bg-ro-gray-900/60 backdrop-blur-sm overflow-visible block"
+                  className="relative w-full bg-ro-gray-900/80 lg:bg-ro-gray-900/60 lg:backdrop-blur-sm overflow-visible block"
                 >
                   {/* SVG Border Trace — welds clockwise */}
+                  {/* SVG Border + Bolts — desktop only (too expensive on mobile) */}
                   <svg
-                      className="card-border-svg absolute inset-0 w-full h-full pointer-events-none z-20"
+                      className="card-border-svg absolute inset-0 w-full h-full pointer-events-none z-20 hidden lg:block"
                       preserveAspectRatio="none"
                     >
                       <rect
@@ -258,19 +246,21 @@ export default function DivisionCards() {
                       />
                     </svg>
 
-                  {/* Corner Bolts */}
-                  <div className="card-bolt card-bolt-tl absolute top-2 left-2 w-2 h-2 rounded-full"
+                  <div className="card-bolt card-bolt-tl absolute top-2 left-2 w-2 h-2 rounded-full hidden lg:block"
                     style={{ background: 'radial-gradient(circle, #D4B965 0%, #C9A84C 60%, #8A7233 100%)', boxShadow: '0 0 4px rgba(201,168,76,0.3)' }}
                   />
-                  <div className="card-bolt card-bolt-tr absolute top-2 right-2 w-2 h-2 rounded-full"
+                  <div className="card-bolt card-bolt-tr absolute top-2 right-2 w-2 h-2 rounded-full hidden lg:block"
                     style={{ background: 'radial-gradient(circle, #D4B965 0%, #C9A84C 60%, #8A7233 100%)', boxShadow: '0 0 4px rgba(201,168,76,0.3)' }}
                   />
-                  <div className="card-bolt card-bolt-bl absolute bottom-2 left-2 w-2 h-2 rounded-full"
+                  <div className="card-bolt card-bolt-bl absolute bottom-2 left-2 w-2 h-2 rounded-full hidden lg:block"
                     style={{ background: 'radial-gradient(circle, #D4B965 0%, #C9A84C 60%, #8A7233 100%)', boxShadow: '0 0 4px rgba(201,168,76,0.3)' }}
                   />
-                  <div className="card-bolt card-bolt-br absolute bottom-2 right-2 w-2 h-2 rounded-full"
+                  <div className="card-bolt card-bolt-br absolute bottom-2 right-2 w-2 h-2 rounded-full hidden lg:block"
                     style={{ background: 'radial-gradient(circle, #D4B965 0%, #C9A84C 60%, #8A7233 100%)', boxShadow: '0 0 4px rgba(201,168,76,0.3)' }}
                   />
+
+                  {/* Mobile: simple gold border instead of SVG + bolts */}
+                  <div className="absolute inset-0 border border-ro-gold/20 lg:hidden pointer-events-none" />
 
                   {/* Card Content */}
                   <div className="p-6 sm:p-8">
