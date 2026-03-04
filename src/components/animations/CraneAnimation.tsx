@@ -121,33 +121,31 @@ export default function CraneAnimation({
     //  Crane SVG hidden via CSS, content fades up
     // ═══════════════════════════════════════════════
     mm.add(MEDIA_QUERIES.mobile, () => {
-      if (!contentRef.current || !spacerRef.current) return;
+      if (!contentRef.current) return;
 
       gsap.set(contentRef.current, { opacity: 0 });
 
-      // Scrub fade-in tied to spacer — content fades up over first 40%
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: spacerRef.current,
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: 1,
-          id: 'crane-mobile-scrub',
-        },
-      });
-
-      tl.fromTo(contentRef.current,
+      gsap.fromTo(contentRef.current,
         { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' },
-        0
+        {
+          opacity: 1, y: 0,
+          duration: 0.7,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 60%',
+            toggleActions: 'play none none none',
+            id: 'crane-mobile',
+          },
+        }
       );
     });
 
   }, { scope: sectionRef });
 
   return (
-    <div ref={spacerRef} className={`relative z-[20] [height:150vh] lg:[height:250vh] ${className}`}>
-    <div ref={sectionRef} className="sticky top-0 h-screen overflow-hidden flex items-center justify-center lg:block lg:py-0">
+    <div ref={spacerRef} className={`relative lg:z-[10] lg:[height:250vh] ${className}`}>
+    <div ref={sectionRef} className="lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden py-16 lg:py-0">
       {/* Blueprint grid background */}
       <div
         className="absolute inset-0 pointer-events-none"

@@ -247,8 +247,8 @@ export default function Hero() {
   };
 
   return (
-    <div ref={spacerRef} className="relative z-[50] [height:150vh] lg:[height:400vh]">
-    <section ref={sectionRef} className="sticky top-0 h-screen flex items-center justify-center overflow-hidden bg-ro-black pt-20">
+    <div ref={spacerRef} className="relative lg:z-[40] lg:[height:400vh]">
+    <section ref={sectionRef} className="min-h-screen lg:sticky lg:top-0 lg:h-screen flex items-center justify-start lg:justify-center overflow-hidden bg-ro-black pt-20">
       {/* Animated blueprint grid */}
       <BlueprintGrid intensity="low" animate={true} />
 

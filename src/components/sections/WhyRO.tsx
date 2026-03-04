@@ -139,8 +139,6 @@ export default function WhyRO() {
     //  cards just fade up simply — no bolt/weld micro-animations
     // ═══════════════════════════════════════════════
     mm.add(MEDIA_QUERIES.mobile, () => {
-      if (!spacerRef.current) return;
-
       // Set initial hidden states
       gsap.set([badgeRef.current, goldLineRef.current], { opacity: 0 });
       if (scaffoldRef.current) gsap.set(scaffoldRef.current, { opacity: 0 });
@@ -151,28 +149,25 @@ export default function WhyRO() {
       const split = SplitText.create(titleRef.current!, { type: 'chars' });
       gsap.set(split.chars, { opacity: 0 });
 
-      // ─── Single scrub timeline tied to spacer ───
-      // Section is sticky, so individual card triggers won't fire.
-      // Everything builds sequentially as you scroll through the 200vh spacer.
-      const tl = gsap.timeline({
+      // ─── Header auto-play — trigger at 65% ───
+      const headerTl = gsap.timeline({
         scrollTrigger: {
-          trigger: spacerRef.current,
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: 1,
-          id: 'whyro-mobile-scrub',
+          trigger: sectionRef.current,
+          start: 'top 65%',
+          toggleActions: 'play none none none',
+          id: 'whyro-header-mobile',
         },
       });
 
-      // 0–5%: Badge fades up
-      tl.fromTo(badgeRef.current,
+      // Badge fades up
+      headerTl.fromTo(badgeRef.current,
         { y: 15, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.05, ease: 'power2.out' },
+        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
         0
       );
 
-      // 2–12%: Letters scatter-to-bolt (signature effect)
-      tl.fromTo(split.chars,
+      // Letters scatter-to-bolt (keep this — it's the signature effect)
+      headerTl.fromTo(split.chars,
         {
           x: () => gsap.utils.random(-80, 80),
           y: () => gsap.utils.random(-60, 60),
@@ -182,55 +177,38 @@ export default function WhyRO() {
         },
         {
           x: 0, y: 0, rotation: 0, scale: 1, opacity: 1,
-          stagger: 0.005,
+          stagger: 0.04,
           ease: 'back.out(1.7)',
-          duration: 0.10,
+          duration: 0.6,
         },
-        0.02
+        0.2
       );
 
-      // 12–15%: Gold line draws
-      tl.fromTo(goldLineRef.current,
+      // Gold line draws
+      headerTl.fromTo(goldLineRef.current,
         { scaleX: 0, opacity: 0, transformOrigin: 'left center' },
-        { scaleX: 1, opacity: 1, duration: 0.03, ease: 'power2.inOut' },
-        0.12
+        { scaleX: 1, opacity: 1, duration: 0.4, ease: 'power2.inOut' },
+        1.0
       );
 
-      // 18–35%: Card 1 fades/rises in
-      if (allCards[0]) {
-        tl.fromTo(allCards[0],
+      // ─── Cards: simple fade+rise, stagger pairs ───
+      // WhyRO cards are in a 2-col grid, so stagger left-right pairs
+      allCards.forEach((card, i) => {
+        gsap.fromTo(card,
           { y: 30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.17, ease: 'power2.out' },
-          0.18
+          {
+            y: 0, opacity: 1,
+            duration: 0.6,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: card,
+              start: 'top 70%',
+              toggleActions: 'play none none none',
+              id: `whyro-card-${i}-mobile`,
+            },
+          }
         );
-      }
-
-      // 35–55%: Card 2 fades/rises in
-      if (allCards[1]) {
-        tl.fromTo(allCards[1],
-          { y: 30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.20, ease: 'power2.out' },
-          0.35
-        );
-      }
-
-      // 55–75%: Card 3 fades/rises in
-      if (allCards[2]) {
-        tl.fromTo(allCards[2],
-          { y: 30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.20, ease: 'power2.out' },
-          0.55
-        );
-      }
-
-      // 75–92%: Card 4 fades/rises in
-      if (allCards[3]) {
-        tl.fromTo(allCards[3],
-          { y: 30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.17, ease: 'power2.out' },
-          0.75
-        );
-      }
+      });
 
       return () => { split.revert(); };
     });
@@ -238,17 +216,17 @@ export default function WhyRO() {
   }, { scope: sectionRef });
 
   return (
-    <div ref={spacerRef} className="relative z-[30] [height:200vh] lg:[height:280vh]">
+    <div ref={spacerRef} className="relative lg:z-[20] lg:[height:280vh]">
     <section
       ref={sectionRef}
-      className="sticky top-0 h-screen overflow-hidden bg-ro-black"
+      className="lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden bg-ro-black"
     >
       <BlueprintGrid intensity="medium" animate={true} />
 
       {/* Gradient overlays */}
       <div className="absolute inset-0 bg-gradient-to-b from-ro-black via-transparent to-ro-black pointer-events-none z-[1]" />
 
-      <div className="relative z-10 flex flex-col h-screen px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 flex flex-col min-h-screen lg:h-screen px-4 sm:px-6 lg:px-8">
         {/* Header Area */}
         <div className="pt-20 pb-4 text-center flex-shrink-0">
           {/* Badge */}

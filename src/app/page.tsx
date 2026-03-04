@@ -8,11 +8,11 @@ export default function HomePage() {
   return (
     <>
       <Hero />
-      <SectionTransition label="FLOOR 01" sparks zIndex={45} />
+      <SectionTransition label="FLOOR 01" sparks />
       <DivisionCards />
-      <SectionTransition label="FLOOR 02" sparks zIndex={35} />
+      <SectionTransition label="FLOOR 02" sparks />
       <WhyRO />
-      <SectionTransition label="FLOOR 03" sparks zIndex={25} />
+      <SectionTransition label="FLOOR 03" sparks />
       <ConstructionCTA />
     </>
   );
