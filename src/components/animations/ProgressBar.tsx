@@ -23,7 +23,7 @@ export default function ProgressBar() {
 
     // Kill any existing ScrollTriggers on this element
     ScrollTrigger.getAll().forEach((st) => {
-      if (st.vars.trigger === document.documentElement && st.animation?.targets()?.includes(barRef.current)) {
+      if (st.vars.trigger === document.documentElement && (st.animation as any)?.targets?.()?.includes(barRef.current)) {
         st.kill();
       }
     });
