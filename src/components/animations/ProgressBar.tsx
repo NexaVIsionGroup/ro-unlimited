@@ -21,11 +21,9 @@ export default function ProgressBar() {
       tweenRef.current.kill();
     }
 
-    // Kill any existing ScrollTriggers on this element
+    // Kill any existing ScrollTriggers for this progress bar
     ScrollTrigger.getAll().forEach((st) => {
-      if (st.vars.trigger === document.documentElement && (st.animation as any)?.targets?.()?.includes(barRef.current)) {
-        st.kill();
-      }
+      if (st.vars.id === 'progress-bar') st.kill();
     });
 
     // Reset bar to 0
