@@ -134,48 +134,14 @@ export default function Hero() {
 
       // Hero is always in-viewport on load — no ScrollTrigger needed.
       // 0.8s delay lets the page fully render before animation starts.
+      // Bottom-to-top build order — "from the ground up" literally.
       const tl = gsap.timeline({ delay: 0.8 });
 
-      // Badge fades down
-      tl.fromTo(badgeRef.current,
-        { y: -20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+      // Stats rise from below (ground level)
+      tl.fromTo(statsRef.current,
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' },
         0
-      );
-
-      // "WE BUILD" drops in
-      tl.fromTo(line1Ref.current,
-        { y: -30, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
-        0.2
-      );
-
-      // "EVERYTHING" scales up
-      tl.fromTo(line2Ref.current,
-        { scale: 0.85, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.4)' },
-        0.5
-      );
-
-      // "FROM THE GROUND UP" rises
-      tl.fromTo(line3Ref.current,
-        { y: 25, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
-        0.8
-      );
-
-      // Gold line draws
-      tl.fromTo(goldLineRef.current,
-        { scaleX: 0, opacity: 0, transformOrigin: 'left center' },
-        { scaleX: 1, opacity: 1, duration: 0.4, ease: 'power2.inOut' },
-        1.1
-      );
-
-      // Description fades up
-      tl.fromTo(descRef.current,
-        { y: 15, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
-        1.3
       );
 
       // CTA buttons stagger in
@@ -183,15 +149,50 @@ export default function Hero() {
         tl.fromTo(ctaRef.current.children,
           { y: 15, opacity: 0 },
           { y: 0, opacity: 1, duration: 0.4, stagger: 0.15, ease: 'power2.out' },
-          1.6
+          0.25
         );
       }
 
-      // Stats rise from below
-      tl.fromTo(statsRef.current,
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' },
-        2.0
+      // Description fades up
+      tl.fromTo(descRef.current,
+        { y: 15, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+        0.6
+      );
+
+      // Gold line draws
+      tl.fromTo(goldLineRef.current,
+        { scaleX: 0, opacity: 0, transformOrigin: 'left center' },
+        { scaleX: 1, opacity: 1, duration: 0.4, ease: 'power2.inOut' },
+        0.9
+      );
+
+      // "FROM THE GROUND UP" rises into place
+      tl.fromTo(line3Ref.current,
+        { y: 25, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+        1.1
+      );
+
+      // "EVERYTHING" scales up
+      tl.fromTo(line2Ref.current,
+        { scale: 0.85, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.4)' },
+        1.4
+      );
+
+      // "WE BUILD" rises in
+      tl.fromTo(line1Ref.current,
+        { y: -20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
+        1.7
+      );
+
+      // Badge lands on top last
+      tl.fromTo(badgeRef.current,
+        { y: -15, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+        2.1
       );
     });
 
