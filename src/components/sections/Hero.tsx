@@ -10,13 +10,15 @@ import CountUp from '@/components/animations/CountUp';
 
 /**
  * HERO — Desktop: pinned scrub-linked construction sequence.
- *        Mobile: auto-play on viewport entry (~1.4s build).
+ *        Mobile: auto-play on viewport entry (~3.5s build).
  *
  * Desktop (scrub) builds bottom-to-top as you scroll through 400vh:
  *   Stats → CTAs → Description → Gold line → headings → badge
  *
- * Mobile (auto-play) builds top-to-bottom on viewport entry:
- *   Badge → headings → gold line → description → CTAs → stats
+ * Mobile (auto-play) builds in user-requested order:
+ *   Phone → Gold CTA → Description → Gold line →
+ *   FROM THE GROUND UP (letters) → EVERYTHING (scale) →
+ *   WE BUILD (letters) → Badge. Stats: ScrollTrigger.
  *
  * gsap.matchMedia() auto-reverts all animations when breakpoint changes.
  */
@@ -123,25 +125,58 @@ export default function Hero() {
 
     // ═══════════════════════════════════════════════
     //  MOBILE — Auto-play on page load
-    //  Longer delay so user sees the build. Smooth cascade ~2.5s.
+    //  Order: phone → CTA → desc → gold line → FROM THE GROUND UP
+    //  → EVERYTHING → WE BUILD → badge. Stats: ScrollTrigger.
     // ═══════════════════════════════════════════════
     mm.add(MEDIA_QUERIES.mobile, () => {
-      gsap.set([badgeRef.current, goldLineRef.current, descRef.current, statsRef.current], { opacity: 0 });
+      // Hide everything initially
+      gsap.set([badgeRef.current, line2Ref.current, goldLineRef.current, descRef.current, statsRef.current], { opacity: 0 });
       if (ctaRef.current?.children.length) {
         gsap.set(ctaRef.current.children, { opacity: 0 });
       }
 
-      // SplitText each heading line — letters scatter then assemble
+      // SplitText on WE BUILD and FROM THE GROUND UP only.
+      // EVERYTHING skips SplitText — gradient-text-gold (bg-clip-text
+      // + text-transparent) breaks SplitText char divs. Scale+fade instead.
       const split3 = SplitText.create(line3Ref.current!, { type: 'chars' });
-      const split2 = SplitText.create(line2Ref.current!, { type: 'chars' });
       const split1 = SplitText.create(line1Ref.current!, { type: 'chars' });
-      gsap.set([split3.chars, split2.chars, split1.chars], { opacity: 0 });
+      gsap.set([split3.chars, split1.chars], { opacity: 0 });
 
-      // Heading builds bottom-to-top on load, letters scatter-to-bolt.
-      // Below-fold items (CTAs, stats) get their own ScrollTrigger.
       const tl = gsap.timeline({ delay: 0.8 });
 
-      // "FROM THE GROUND UP" — letters assemble first (bottom of heading)
+      // 1. Phone number rises in — first thing user sees
+      if (ctaRef.current?.children[1]) {
+        tl.fromTo(ctaRef.current.children[1],
+          { y: 20, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out' },
+          0
+        );
+      }
+
+      // 2. Gold CTA button pops in
+      if (ctaRef.current?.children[0]) {
+        tl.fromTo(ctaRef.current.children[0],
+          { scale: 0.8, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(1.5)' },
+          0.3
+        );
+      }
+
+      // 3. Description fades up
+      tl.fromTo(descRef.current,
+        { y: 15, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+        0.6
+      );
+
+      // 4. Gold weld line draws across
+      tl.fromTo(goldLineRef.current,
+        { scaleX: 0, opacity: 0, transformOrigin: 'left center' },
+        { scaleX: 1, opacity: 1, duration: 0.4, ease: 'power2.inOut' },
+        0.9
+      );
+
+      // 5. "FROM THE GROUND UP" — letters assemble from below
       tl.fromTo(split3.chars,
         {
           x: () => gsap.utils.random(-60, 60),
@@ -156,28 +191,17 @@ export default function Hero() {
           ease: 'back.out(1.7)',
           duration: 0.5,
         },
-        0
+        1.1
       );
 
-      // "EVERYTHING" — letters fly in from wider spread
-      tl.fromTo(split2.chars,
-        {
-          x: () => gsap.utils.random(-80, 80),
-          y: () => gsap.utils.random(-40, 40),
-          rotation: () => gsap.utils.random(-120, 120),
-          scale: 0.3,
-          opacity: 0,
-        },
-        {
-          x: 0, y: 0, rotation: 0, scale: 1, opacity: 1,
-          stagger: 0.025,
-          ease: 'back.out(1.7)',
-          duration: 0.5,
-        },
-        0.5
+      // 6. "EVERYTHING" — scale+fade (no SplitText, preserves gradient)
+      tl.fromTo(line2Ref.current,
+        { scale: 0.3, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.5)' },
+        1.7
       );
 
-      // "WE BUILD" — letters drop from above
+      // 7. "WE BUILD" — letters drop from above
       tl.fromTo(split1.chars,
         {
           x: () => gsap.utils.random(-50, 50),
@@ -192,47 +216,17 @@ export default function Hero() {
           ease: 'back.out(1.7)',
           duration: 0.5,
         },
-        1.0
+        2.1
       );
 
-      // Badge lands on top last
+      // 8. Badge — final sign bolted on top
       tl.fromTo(badgeRef.current,
         { y: -15, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
-        1.5
+        2.7
       );
 
-      // Gold line draws
-      tl.fromTo(goldLineRef.current,
-        { scaleX: 0, opacity: 0, transformOrigin: 'left center' },
-        { scaleX: 1, opacity: 1, duration: 0.4, ease: 'power2.inOut' },
-        1.7
-      );
-
-      // Description fades up
-      tl.fromTo(descRef.current,
-        { y: 15, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
-        1.9
-      );
-
-      // ─── Below-fold: CTAs + stats animate when scrolled into view ───
-      if (ctaRef.current?.children.length) {
-        gsap.fromTo(ctaRef.current.children,
-          { y: 15, opacity: 0 },
-          {
-            y: 0, opacity: 1,
-            duration: 0.5, stagger: 0.12, ease: 'power2.out',
-            scrollTrigger: {
-              trigger: ctaRef.current,
-              start: 'top 85%',
-              toggleActions: 'play none none none',
-              id: 'hero-cta-mobile',
-            },
-          }
-        );
-      }
-
+      // ─── Stats: below fold, animate when scrolled into view ───
       gsap.fromTo(statsRef.current,
         { y: 20, opacity: 0 },
         {
@@ -247,7 +241,7 @@ export default function Hero() {
         }
       );
 
-      return () => { split1.revert(); split2.revert(); split3.revert(); };
+      return () => { split1.revert(); split3.revert(); };
     });
 
   }, { scope: sectionRef });
