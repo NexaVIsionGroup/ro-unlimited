@@ -139,6 +139,8 @@ export default function WhyRO() {
     //  cards just fade up simply — no bolt/weld micro-animations
     // ═══════════════════════════════════════════════
     mm.add(MEDIA_QUERIES.mobile, () => {
+      const inFlipMode = !!sectionRef.current?.closest('.page-flip-slide');
+
       // Set initial hidden states
       gsap.set([badgeRef.current, goldLineRef.current], { opacity: 0 });
       if (scaffoldRef.current) gsap.set(scaffoldRef.current, { opacity: 0 });
@@ -149,7 +151,59 @@ export default function WhyRO() {
       const split = SplitText.create(titleRef.current!, { type: 'chars' });
       gsap.set(split.chars, { opacity: 0 });
 
-      // ─── Header auto-play — trigger at 65% ───
+      if (inFlipMode) {
+        // FLIP MODE: entrance animation, paused until slide enters
+        const entranceTl = gsap.timeline({ paused: true });
+
+        entranceTl.fromTo(badgeRef.current,
+          { y: 15, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+          0
+        );
+
+        entranceTl.fromTo(split.chars,
+          {
+            x: () => gsap.utils.random(-80, 80),
+            y: () => gsap.utils.random(-60, 60),
+            rotation: () => gsap.utils.random(-90, 90),
+            scale: 0.4, opacity: 0,
+          },
+          {
+            x: 0, y: 0, rotation: 0, scale: 1, opacity: 1,
+            stagger: 0.04, ease: 'back.out(1.7)', duration: 0.6,
+          },
+          0.2
+        );
+
+        entranceTl.fromTo(goldLineRef.current,
+          { scaleX: 0, opacity: 0, transformOrigin: 'left center' },
+          { scaleX: 1, opacity: 1, duration: 0.4, ease: 'power2.inOut' },
+          1.0
+        );
+
+        entranceTl.fromTo(allCards,
+          { y: 20, opacity: 0 },
+          { y: 0, opacity: 1, stagger: 0.1, duration: 0.5, ease: 'power2.out' },
+          1.2
+        );
+
+        const flipSlide = sectionRef.current!.closest('.page-flip-slide')!;
+        const myIndex = Array.from(document.querySelectorAll('.page-flip-slide')).indexOf(flipSlide);
+        const handler = (e: Event) => {
+          if ((e as CustomEvent).detail?.index === myIndex) {
+            entranceTl.play();
+            window.removeEventListener('flipSlideEnter', handler);
+          }
+        };
+        window.addEventListener('flipSlideEnter', handler);
+
+        return () => {
+          split.revert();
+          window.removeEventListener('flipSlideEnter', handler);
+        };
+      }
+
+      // ─── NORMAL MODE: Header auto-play — trigger at 65% ───
       const headerTl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,

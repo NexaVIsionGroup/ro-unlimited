@@ -123,7 +123,30 @@ export default function CraneAnimation({
     mm.add(MEDIA_QUERIES.mobile, () => {
       if (!contentRef.current) return;
 
+      const inFlipMode = !!sectionRef.current?.closest('.page-flip-slide');
+
       gsap.set(contentRef.current, { opacity: 0 });
+
+      if (inFlipMode) {
+        // Entrance animation paused until slide enters
+        const entranceTl = gsap.timeline({ paused: true });
+        entranceTl.fromTo(contentRef.current,
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' }
+        );
+
+        const flipSlide = sectionRef.current!.closest('.page-flip-slide')!;
+        const myIndex = Array.from(document.querySelectorAll('.page-flip-slide')).indexOf(flipSlide);
+        const handler = (e: Event) => {
+          if ((e as CustomEvent).detail?.index === myIndex) {
+            entranceTl.play();
+            window.removeEventListener('flipSlideEnter', handler);
+          }
+        };
+        window.addEventListener('flipSlideEnter', handler);
+
+        return () => window.removeEventListener('flipSlideEnter', handler);
+      }
 
       gsap.fromTo(contentRef.current,
         { opacity: 0, y: 30 },

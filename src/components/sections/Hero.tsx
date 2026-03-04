@@ -129,6 +129,8 @@ export default function Hero() {
     //  → EVERYTHING → WE BUILD → badge. Stats: ScrollTrigger.
     // ═══════════════════════════════════════════════
     mm.add(MEDIA_QUERIES.mobile, () => {
+      const inFlipMode = !!sectionRef.current?.closest('.page-flip-slide');
+
       // Hide everything initially
       gsap.set([badgeRef.current, line2Ref.current, goldLineRef.current], { opacity: 0 });
       if (ctaRef.current?.children.length) {
@@ -146,7 +148,7 @@ export default function Hero() {
       const splitDesc = SplitText.create(descRef.current!, { type: 'lines', mask: 'lines' });
       gsap.set(splitDesc.lines, { y: '100%' });
 
-      const tl = gsap.timeline({ delay: 0.5 });
+      const tl = gsap.timeline(inFlipMode ? { paused: true } : { delay: 0.5 });
 
       // 1. Phone number — slides in from right (0s)
       if (ctaRef.current?.children[1]) {
@@ -213,8 +215,24 @@ export default function Hero() {
         gsap.set([split3.chars, split1.chars], { willChange: 'auto' });
       });
 
+      // Flip mode: listen for entrance event to play
+      let flipHandler: ((e: Event) => void) | null = null;
+      if (inFlipMode) {
+        const flipSlide = sectionRef.current!.closest('.page-flip-slide')!;
+        const myIndex = Array.from(document.querySelectorAll('.page-flip-slide')).indexOf(flipSlide);
+        flipHandler = (e: Event) => {
+          if ((e as CustomEvent).detail?.index === myIndex) {
+            tl.play();
+            window.removeEventListener('flipSlideEnter', flipHandler!);
+            flipHandler = null;
+          }
+        };
+        window.addEventListener('flipSlideEnter', flipHandler);
+      }
+
       // ─── Stats: concrete pour from bottom, stagger from edges ───
-      if (statsRef.current?.children.length) {
+      // In flip mode, skip ScrollTrigger — stats stay visible
+      if (statsRef.current?.children.length && !inFlipMode) {
         const statEls = Array.from(statsRef.current.children) as HTMLElement[];
         gsap.set(statEls, { scaleY: 0, transformOrigin: 'center bottom', opacity: 0 });
 
@@ -234,7 +252,10 @@ export default function Hero() {
         );
       }
 
-      return () => { split1.revert(); split3.revert(); splitDesc.revert(); };
+      return () => {
+        split1.revert(); split3.revert(); splitDesc.revert();
+        if (flipHandler) window.removeEventListener('flipSlideEnter', flipHandler);
+      };
     });
 
   }, { scope: sectionRef });

@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import Link from 'next/link';
 import { DIVISIONS } from '@/lib/constants';
 import { ArrowRight, Home, Building2, Mountain, HardHat } from 'lucide-react';
-import { gsap, ScrollTrigger, useGSAP } from '@/components/animations/GSAPProvider';
+import { gsap, ScrollTrigger, useGSAP, MEDIA_QUERIES } from '@/components/animations/GSAPProvider';
 import BlueprintGrid from '@/components/animations/BlueprintGrid';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,6 +29,51 @@ export default function DivisionCards() {
 
   useGSAP(() => {
     if (!spacerRef.current) return;
+
+    // In flip mode on mobile, collapse bodies + entrance animation
+    if (typeof window !== 'undefined') {
+      const isMobile = window.matchMedia(MEDIA_QUERIES.mobile).matches;
+      if (isMobile && sectionRef.current?.closest('.page-flip-slide')) {
+        const allCards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
+        const bodies = allCards
+          .map(c => c.querySelector('.card-body') as HTMLElement)
+          .filter(Boolean);
+        gsap.set(bodies, { height: 0, paddingBottom: 0, opacity: 0 });
+
+        // Hide cards + header for entrance animation
+        gsap.set(allCards, { opacity: 0, y: 20 });
+        const header = sectionRef.current!.querySelector('.text-center') as HTMLElement;
+        if (header) gsap.set(header, { opacity: 0, y: -15 });
+
+        // Entrance animation (paused)
+        const entranceTl = gsap.timeline({ paused: true });
+        if (header) {
+          entranceTl.fromTo(header,
+            { opacity: 0, y: -15 },
+            { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' },
+            0
+          );
+        }
+        entranceTl.fromTo(allCards,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, stagger: 0.1, duration: 0.5, ease: 'power2.out' },
+          0.2
+        );
+
+        // Listen for flip event
+        const flipSlide = sectionRef.current!.closest('.page-flip-slide')!;
+        const myIndex = Array.from(document.querySelectorAll('.page-flip-slide')).indexOf(flipSlide);
+        const handler = (e: Event) => {
+          if ((e as CustomEvent).detail?.index === myIndex) {
+            entranceTl.play();
+            window.removeEventListener('flipSlideEnter', handler);
+          }
+        };
+        window.addEventListener('flipSlideEnter', handler);
+
+        return;
+      }
+    }
 
     const allCards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
     const bodies = allCards.map(c => c.querySelector('.card-body') as HTMLElement).filter(Boolean);
