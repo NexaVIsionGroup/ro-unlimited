@@ -11,3 +11,4 @@ npm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+src_backup_pre_rebuild/ 
