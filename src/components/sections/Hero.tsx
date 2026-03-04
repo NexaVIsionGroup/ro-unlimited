@@ -132,67 +132,81 @@ export default function Hero() {
         gsap.set(ctaRef.current.children, { opacity: 0 });
       }
 
-      // Hero is always in-viewport on load — no ScrollTrigger needed.
-      // 0.8s delay lets the page fully render before animation starts.
-      // Bottom-to-top build order — "from the ground up" literally.
+      // Heading builds bottom-to-top on load (visible above fold).
+      // Below-fold items (CTAs, stats) get their own ScrollTrigger.
       const tl = gsap.timeline({ delay: 0.8 });
 
-      // Stats rise from below (ground level)
-      tl.fromTo(statsRef.current,
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' },
-        0
-      );
-
-      // CTA buttons stagger in
-      if (ctaRef.current?.children.length) {
-        tl.fromTo(ctaRef.current.children,
-          { y: 15, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.4, stagger: 0.15, ease: 'power2.out' },
-          0.25
-        );
-      }
-
-      // Description fades up
-      tl.fromTo(descRef.current,
-        { y: 15, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
-        0.6
-      );
-
-      // Gold line draws
-      tl.fromTo(goldLineRef.current,
-        { scaleX: 0, opacity: 0, transformOrigin: 'left center' },
-        { scaleX: 1, opacity: 1, duration: 0.4, ease: 'power2.inOut' },
-        0.9
-      );
-
-      // "FROM THE GROUND UP" rises into place
+      // "FROM THE GROUND UP" rises first (bottom of heading)
       tl.fromTo(line3Ref.current,
         { y: 25, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
-        1.1
+        0
       );
 
       // "EVERYTHING" scales up
       tl.fromTo(line2Ref.current,
         { scale: 0.85, opacity: 0 },
         { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.4)' },
-        1.4
+        0.3
       );
 
       // "WE BUILD" rises in
       tl.fromTo(line1Ref.current,
         { y: -20, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
-        1.7
+        0.6
       );
 
       // Badge lands on top last
       tl.fromTo(badgeRef.current,
         { y: -15, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
-        2.1
+        1.0
+      );
+
+      // Gold line draws (still on-screen, right below heading)
+      tl.fromTo(goldLineRef.current,
+        { scaleX: 0, opacity: 0, transformOrigin: 'left center' },
+        { scaleX: 1, opacity: 1, duration: 0.4, ease: 'power2.inOut' },
+        1.2
+      );
+
+      // Description fades up
+      tl.fromTo(descRef.current,
+        { y: 15, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+        1.4
+      );
+
+      // ─── Below-fold: CTAs + stats animate when scrolled into view ───
+      if (ctaRef.current?.children.length) {
+        gsap.fromTo(ctaRef.current.children,
+          { y: 15, opacity: 0 },
+          {
+            y: 0, opacity: 1,
+            duration: 0.5, stagger: 0.12, ease: 'power2.out',
+            scrollTrigger: {
+              trigger: ctaRef.current,
+              start: 'top 85%',
+              toggleActions: 'play none none none',
+              id: 'hero-cta-mobile',
+            },
+          }
+        );
+      }
+
+      gsap.fromTo(statsRef.current,
+        { y: 20, opacity: 0 },
+        {
+          y: 0, opacity: 1,
+          duration: 0.5, ease: 'power3.out',
+          scrollTrigger: {
+            trigger: statsRef.current,
+            start: 'top 85%',
+            toggleActions: 'play none none none',
+            id: 'hero-stats-mobile',
+          },
+        }
       );
     });
 
