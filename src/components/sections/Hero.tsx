@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import Link from 'next/link';
 import { COMPANY, TRUST_STATS } from '@/lib/constants';
 import { ArrowRight, Phone } from 'lucide-react';
-import { gsap, ScrollTrigger, useGSAP, MEDIA_QUERIES } from '@/components/animations/GSAPProvider';
+import { gsap, ScrollTrigger, SplitText, useGSAP, MEDIA_QUERIES } from '@/components/animations/GSAPProvider';
 import BlueprintGrid from '@/components/animations/BlueprintGrid';
 import CountUp from '@/components/animations/CountUp';
 
@@ -126,56 +126,94 @@ export default function Hero() {
     //  Longer delay so user sees the build. Smooth cascade ~2.5s.
     // ═══════════════════════════════════════════════
     mm.add(MEDIA_QUERIES.mobile, () => {
-      gsap.set([badgeRef.current, line1Ref.current, line2Ref.current, line3Ref.current,
-        goldLineRef.current, descRef.current, statsRef.current], { opacity: 0 });
+      gsap.set([badgeRef.current, goldLineRef.current, descRef.current, statsRef.current], { opacity: 0 });
       if (ctaRef.current?.children.length) {
         gsap.set(ctaRef.current.children, { opacity: 0 });
       }
 
-      // Heading builds bottom-to-top on load (visible above fold).
+      // SplitText each heading line — letters scatter then assemble
+      const split3 = SplitText.create(line3Ref.current!, { type: 'chars' });
+      const split2 = SplitText.create(line2Ref.current!, { type: 'chars' });
+      const split1 = SplitText.create(line1Ref.current!, { type: 'chars' });
+      gsap.set([split3.chars, split2.chars, split1.chars], { opacity: 0 });
+
+      // Heading builds bottom-to-top on load, letters scatter-to-bolt.
       // Below-fold items (CTAs, stats) get their own ScrollTrigger.
       const tl = gsap.timeline({ delay: 0.8 });
 
-      // "FROM THE GROUND UP" rises first (bottom of heading)
-      tl.fromTo(line3Ref.current,
-        { y: 25, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
+      // "FROM THE GROUND UP" — letters assemble first (bottom of heading)
+      tl.fromTo(split3.chars,
+        {
+          x: () => gsap.utils.random(-60, 60),
+          y: () => gsap.utils.random(20, 80),
+          rotation: () => gsap.utils.random(-90, 90),
+          scale: 0.3,
+          opacity: 0,
+        },
+        {
+          x: 0, y: 0, rotation: 0, scale: 1, opacity: 1,
+          stagger: 0.02,
+          ease: 'back.out(1.7)',
+          duration: 0.5,
+        },
         0
       );
 
-      // "EVERYTHING" scales up
-      tl.fromTo(line2Ref.current,
-        { scale: 0.85, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.4)' },
-        0.3
+      // "EVERYTHING" — letters fly in from wider spread
+      tl.fromTo(split2.chars,
+        {
+          x: () => gsap.utils.random(-80, 80),
+          y: () => gsap.utils.random(-40, 40),
+          rotation: () => gsap.utils.random(-120, 120),
+          scale: 0.3,
+          opacity: 0,
+        },
+        {
+          x: 0, y: 0, rotation: 0, scale: 1, opacity: 1,
+          stagger: 0.025,
+          ease: 'back.out(1.7)',
+          duration: 0.5,
+        },
+        0.5
       );
 
-      // "WE BUILD" rises in
-      tl.fromTo(line1Ref.current,
-        { y: -20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
-        0.6
+      // "WE BUILD" — letters drop from above
+      tl.fromTo(split1.chars,
+        {
+          x: () => gsap.utils.random(-50, 50),
+          y: () => gsap.utils.random(-80, -20),
+          rotation: () => gsap.utils.random(-90, 90),
+          scale: 0.3,
+          opacity: 0,
+        },
+        {
+          x: 0, y: 0, rotation: 0, scale: 1, opacity: 1,
+          stagger: 0.03,
+          ease: 'back.out(1.7)',
+          duration: 0.5,
+        },
+        1.0
       );
 
       // Badge lands on top last
       tl.fromTo(badgeRef.current,
         { y: -15, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
-        1.0
+        1.5
       );
 
-      // Gold line draws (still on-screen, right below heading)
+      // Gold line draws
       tl.fromTo(goldLineRef.current,
         { scaleX: 0, opacity: 0, transformOrigin: 'left center' },
         { scaleX: 1, opacity: 1, duration: 0.4, ease: 'power2.inOut' },
-        1.2
+        1.7
       );
 
       // Description fades up
       tl.fromTo(descRef.current,
         { y: 15, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
-        1.4
+        1.9
       );
 
       // ─── Below-fold: CTAs + stats animate when scrolled into view ───
@@ -208,6 +246,8 @@ export default function Hero() {
           },
         }
       );
+
+      return () => { split1.revert(); split2.revert(); split3.revert(); };
     });
 
   }, { scope: sectionRef });
