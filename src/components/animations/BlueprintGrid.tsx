@@ -32,7 +32,12 @@ export default function BlueprintGrid({
   useEffect(() => {
     if (!gridRef.current || !animate || reducedMotion) return;
 
-    // Subtle pulse animation
+    // Skip GSAP pulse on mobile — 3 instances running infinite tweens
+    // simultaneously tanks performance during section animations.
+    const isMobile = window.matchMedia('(max-width: 1023px)').matches;
+    if (isMobile) return;
+
+    // Desktop only: subtle pulse animation
     const pulse = gsap.to(gridRef.current, {
       opacity: opacityMap[intensity] * 1.8,
       duration: 3,

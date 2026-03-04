@@ -140,7 +140,7 @@ export default function Hero() {
       // + text-transparent) breaks SplitText char divs. Scale+fade instead.
       const split3 = SplitText.create(line3Ref.current!, { type: 'chars' });
       const split1 = SplitText.create(line1Ref.current!, { type: 'chars' });
-      gsap.set([split3.chars, split1.chars], { opacity: 0 });
+      gsap.set([split3.chars, split1.chars], { opacity: 0, willChange: 'transform, opacity' });
 
       const tl = gsap.timeline({ delay: 0.8 });
 
@@ -179,17 +179,14 @@ export default function Hero() {
       // 5. "FROM THE GROUND UP" — letters assemble from below
       tl.fromTo(split3.chars,
         {
-          x: () => gsap.utils.random(-40, 40),
-          y: () => gsap.utils.random(30, 100),
-          rotation: () => gsap.utils.random(-45, 45),
-          scale: 0.3,
+          y: () => gsap.utils.random(30, 90),
           opacity: 0,
         },
         {
-          x: 0, y: 0, rotation: 0, scale: 1, opacity: 1,
+          y: 0, opacity: 1,
           stagger: 0.03,
-          ease: 'back.out(1.4)',
-          duration: 0.7,
+          ease: 'power2.out',
+          duration: 0.6,
         },
         2.0
       );
@@ -204,27 +201,29 @@ export default function Hero() {
       // 7. "WE BUILD" — letters rise from below like stacking blocks
       tl.fromTo(split1.chars,
         {
-          x: () => gsap.utils.random(-40, 40),
-          y: () => gsap.utils.random(30, 100),
-          rotation: () => gsap.utils.random(-45, 45),
-          scale: 0.3,
+          y: () => gsap.utils.random(30, 90),
           opacity: 0,
         },
         {
-          x: 0, y: 0, rotation: 0, scale: 1, opacity: 1,
+          y: 0, opacity: 1,
           stagger: 0.035,
-          ease: 'back.out(1.4)',
-          duration: 0.7,
+          ease: 'power2.out',
+          duration: 0.6,
         },
-        3.4
+        3.2
       );
 
       // 8. Badge — final sign bolted on top
       tl.fromTo(badgeRef.current,
         { y: -15, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' },
-        4.2
+        3.9
       );
+
+      // Clean up GPU layers after build finishes
+      tl.call(() => {
+        gsap.set([split3.chars, split1.chars], { willChange: 'auto' });
+      });
 
       // ─── Stats: below fold, animate when scrolled into view ───
       gsap.fromTo(statsRef.current,
@@ -277,7 +276,7 @@ export default function Hero() {
         <div className="text-center">
           {/* Badge — final sign bolted on top */}
           <div ref={badgeRef} className="inline-flex items-center gap-2 px-4 py-1.5 border border-ro-gold/20 bg-ro-gold/5 mb-8">
-            <span className="w-2 h-2 bg-ro-gold rounded-full animate-pulse" />
+            <span className="w-2 h-2 bg-ro-gold rounded-full" />
             <span className="text-ro-gold text-xs font-mono tracking-wider uppercase">
               {COMPANY.experience} Years Building Excellence
             </span>
