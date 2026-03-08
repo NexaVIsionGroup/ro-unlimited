@@ -10,12 +10,17 @@
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
+    "@sanity/client": "^7.16.0",
+    "@sanity/image-url": "^2.0.3",
     "framer-motion": "^11.0.0",
     "gsap": "^3.14.0",
     "lucide-react": "^0.400.0",
     "next": "^14.2.0",
+    "next-sanity": "^12.1.1",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "react-dom": "^18.3.0",
+    "sanity": "^5.13.0",
+    "styled-components": "^6.3.11"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

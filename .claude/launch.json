@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "dev",
-      "runtimeExecutable": "npx.cmd",
-      "runtimeArgs": ["next", "dev", "-p", "3100"],
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "npx next dev -p 3100"],
       "port": 3100
     }
   ]

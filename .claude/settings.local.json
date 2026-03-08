@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:marketplace.visualstudio.com)"
+      "WebFetch(domain:marketplace.visualstudio.com)",
+      "WebFetch(domain:www.nngroup.com)",
+      "WebFetch(domain:gsap.com)",
+      "WebFetch(domain:www.thecodecreative.com)",
+      "WebFetch(domain:marmelab.com)",
+      "WebFetch(domain:www.digitalsilk.com)"
     ]
   }
 }
