@@ -53,14 +53,17 @@
 
 
 /* Admin mode - hide site chrome */
-body.admin-mode nav,
-body.admin-mode footer,
+body.admin-mode nav.fixed.z-50,
+body.admin-mode footer.relative,
 body.admin-mode .progress-bar,
 body.admin-mode .loading-sequence-overlay {
   display: none !important;
 }
-body.admin-mode main {
-  min-height: 100vh;
+body.admin-mode {
+  overflow: hidden !important;
+}
+body.admin-mode > div > div > div > main.min-h-screen {
+  min-height: auto !important;
 }
 
 
