@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, ExternalLink, LogOut } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 interface AdminHeaderProps {
   title: string;
@@ -10,7 +12,15 @@ interface AdminHeaderProps {
   showLogout?: boolean;
 }
 
-export default function AdminHeader({ title, subtitle, backHref, showLogout }: AdminHeaderProps) {
+export default function AdminHeader({ title, subtitle, backHref, showLogout = true }: AdminHeaderProps) {
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/admin/login');
+  };
+
   return (
     <header className="border-b border-white/5 bg-[#0f0f0f] sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
@@ -30,15 +40,11 @@ export default function AdminHeader({ title, subtitle, backHref, showLogout }: A
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <a
-            href="/"
-            target="_blank"
-            className="flex items-center gap-2 px-3 py-1.5 text-xs text-white/30 hover:text-white border border-white/5 hover:border-white/10 rounded transition-all"
-          >
+          <a href="/" target="_blank" className="flex items-center gap-2 px-3 py-1.5 text-xs text-white/30 hover:text-white border border-white/5 hover:border-white/10 rounded transition-all">
             <ExternalLink size={12} /> Live Site
           </a>
           {showLogout && (
-            <button className="flex items-center gap-2 px-3 py-1.5 text-xs text-white/30 hover:text-red-400 border border-white/5 hover:border-red-400/20 rounded transition-all">
+            <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-1.5 text-xs text-white/30 hover:text-red-400 border border-white/5 hover:border-red-400/20 rounded transition-all">
               <LogOut size={12} /> Sign Out
             </button>
           )}
