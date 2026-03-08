@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sanityWriteClient } from '@/lib/sanity/client';
 
-// Route segment config for large uploads
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
@@ -15,15 +14,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    console.log(`Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) as ${type}...`);
+    console.log(`Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)...`);
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    const isVideo = type === 'heroVideo' || type === 'video' || file.type.startsWith('video/');
 
     const asset = await sanityWriteClient.assets.upload(
-      type === 'video' ? 'file' : 'image',
+      isVideo ? 'file' : 'image',
       buffer,
       { filename: file.name, contentType: file.type }
     );
+
+    // If this is a hero video upload, also link it to siteSettings
+    if (type === 'heroVideo') {
+      await sanityWriteClient.createIfNotExists({
+        _id: 'siteSettings',
+        _type: 'siteSettings',
+      });
+
+      await sanityWriteClient.patch('siteSettings').set({
+        heroVideo: {
+          _type: 'file',
+          asset: { _type: 'reference', _ref: asset._id },
+        },
+      }).commit();
+    }
 
     console.log(`Upload complete: ${asset._id}`);
 

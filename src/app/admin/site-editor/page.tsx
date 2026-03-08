@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Upload, Video, Image, Type, Check, Loader2, Trash2, Eye, RefreshCw } from 'lucide-react';
+import { Upload, Video, Image, Type, Check, Loader2, Trash2, Eye, RefreshCw, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 interface SiteSettings {
   heroVideoUrl?: string;
@@ -127,7 +128,7 @@ export default function SiteEditor() {
     <div>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Site Editor</h1>
+          <div className="flex items-center gap-3"><Link href="/admin" className="text-white/30 hover:text-white transition-colors"><ArrowLeft size={18} /></Link><h1 className="text-2xl font-bold tracking-tight">Site Editor</h1></div>
           <p className="text-white/40 text-sm mt-1">Upload videos, photos, and edit site content.</p>
         </div>
         <button
@@ -269,7 +270,7 @@ export default function SiteEditor() {
             <p className="text-white/40 text-xs">Upload project photos for each division page</p>
           </div>
         </div>
-        <div className="text-white/20 text-sm">Coming next � upload and manage portfolio photos for Residential, Commercial, Land Grading, and Build Process pages.</div>
+        <div className="text-white/20 text-sm">Coming next ��� upload and manage portfolio photos for Residential, Commercial, Land Grading, and Build Process pages.</div>
       </section>
 
       <section className="mt-6 bg-[#111111] border border-white/5 rounded-lg p-6 opacity-40">
@@ -282,8 +283,9 @@ export default function SiteEditor() {
             <p className="text-white/40 text-xs">Edit headlines, descriptions, and page copy</p>
           </div>
         </div>
-        <div className="text-white/20 text-sm">Coming soon � edit all site text directly from this dashboard.</div>
+        <div className="text-white/20 text-sm">Coming soon ��� edit all site text directly from this dashboard.</div>
       </section>
     </div>
   );
 }
+

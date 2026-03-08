@@ -1,31 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@sanity/client';
-
-const readClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'ndwy9k1c',
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-  apiVersion: '2024-01-01',
-  token: process.env.SANITY_API_READ_TOKEN,
-  useCdn: false,
-});
-
-const writeClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'ndwy9k1c',
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-  apiVersion: '2024-01-01',
-  token: process.env.SANITY_API_EDIT_TOKEN,
-  useCdn: false,
-});
+import { sanityClient, sanityWriteClient } from '@/lib/sanity/client';
 
 export async function GET() {
   try {
-    const settings = await readClient.fetch(
+    const settings = await sanityClient.fetch(
       `*[_type == "siteSettings" && _id == "siteSettings"][0]{
         "heroVideoUrl": heroVideo.asset->url,
-        "heroVideoId": heroVideo.asset->_id,
+        "heroVideoId": heroVideo.asset._ref,
         heroOverlayOpacity,
         heroHeadline,
-        heroSubheadline
+        heroSubheadline,
+        heroDescription
       }`
     );
     return NextResponse.json(settings || {});
@@ -41,17 +26,18 @@ export async function POST(req: NextRequest) {
 
     // If heroVideo is explicitly null, remove it
     if (body.heroVideo === null) {
-      await writeClient.patch('siteSettings').unset(['heroVideo']).commit();
+      await sanityWriteClient.patch('siteSettings').unset(['heroVideo']).commit();
       return NextResponse.json({ success: true });
     }
 
-    // Otherwise merge updates
-    await writeClient.createOrReplace({
+    // Ensure doc exists first
+    await sanityWriteClient.createIfNotExists({
       _id: 'siteSettings',
       _type: 'siteSettings',
-      ...body,
     });
 
+    // Merge updates
+    await sanityWriteClient.patch('siteSettings').set(body).commit();
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Settings update error:', error);
@@ -59,5 +45,34 @@ export async function POST(req: NextRequest) {
       { error: error.message || 'Update failed' },
       { status: 500 }
     );
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { field, value, assetRef } = body;
+
+    await sanityWriteClient.createIfNotExists({
+      _id: 'siteSettings',
+      _type: 'siteSettings',
+    });
+
+    let patch: Record<string, any> = {};
+
+    if (assetRef) {
+      patch[field] = {
+        _type: field.includes('Video') ? 'file' : 'image',
+        asset: { _type: 'reference', _ref: assetRef },
+      };
+    } else {
+      patch[field] = value;
+    }
+
+    const result = await sanityWriteClient.patch('siteSettings').set(patch).commit();
+    return NextResponse.json({ success: true, result });
+  } catch (error: any) {
+    console.error('Settings update error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
