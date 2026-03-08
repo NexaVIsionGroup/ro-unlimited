@@ -1,4 +1,5 @@
-﻿'use client';
+import SiteWrapper from '@/components/layout/SiteWrapper';
+'use client';
 
 import Link from 'next/link';
 import { DIVISIONS, COMPANY } from '@/lib/constants';
@@ -9,6 +10,7 @@ const division = DIVISIONS.find(d => d.id === 'residential')!;
 
 export default function ResidentialPage() {
   return (
+    <SiteWrapper>
     <SubPageAnimator>
       <section className="relative min-h-[70vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 blueprint-overlay" />
@@ -63,4 +65,5 @@ export default function ResidentialPage() {
     </SubPageAnimator>
   );
 }
+
 

@@ -1,4 +1,5 @@
-﻿'use client';
+import SiteWrapper from '@/components/layout/SiteWrapper';
+'use client';
 
 import Link from 'next/link';
 import { COMPANY } from '@/lib/constants';
@@ -8,14 +9,15 @@ import SubPageAnimator from '@/components/animations/SubPageAnimator';
 const PHASES = [
   { phase: '01', title: 'Consultation & Design', description: 'We start with your vision. Site evaluation, architectural planning, 3D modeling, and project scoping.' },
   { phase: '02', title: 'Site Preparation', description: 'Land grading, excavation, foundation work, and all site prep handled by our own crews.' },
-  { phase: '03', title: 'Structural Build', description: 'Framing, steel, structural shells — the backbone of every project built to code and beyond.' },
+  { phase: '03', title: 'Structural Build', description: 'Framing, steel, structural shells - the backbone of every project built to code and beyond.' },
   { phase: '04', title: 'Systems & Enclosure', description: 'Roofing, exterior finishes, mechanical systems, electrical, and plumbing integration.' },
-  { phase: '05', title: 'Interior & Finishes', description: 'From luxury interior buildouts to modern industrial design details — we finish what we start.' },
+  { phase: '05', title: 'Interior & Finishes', description: 'From luxury interior buildouts to modern industrial design details - we finish what we start.' },
   { phase: '06', title: 'Final Walkthrough', description: 'Quality assurance, punch list completion, and project handoff. Your project, delivered.' },
 ];
 
 export default function ProcessPage() {
   return (
+    <SiteWrapper>
     <SubPageAnimator>
       <section className="relative min-h-[70vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 blueprint-overlay" />
@@ -30,7 +32,7 @@ export default function ProcessPage() {
               How We<br /><span className="gradient-text-gold">Build It</span>
             </h1>
             <div className="w-24 gold-line mb-6" />
-            <p className="text-ro-gray-400 text-lg sm:text-xl leading-relaxed max-w-xl">From raw land to finished product — see every phase of how RO Unlimited delivers projects on time and built to last.</p>
+            <p className="text-ro-gray-400 text-lg sm:text-xl leading-relaxed max-w-xl">From raw land to finished product - see every phase of how RO Unlimited delivers projects on time and built to last.</p>
           </div>
         </div>
       </section>
@@ -67,4 +69,5 @@ export default function ProcessPage() {
     </SubPageAnimator>
   );
 }
+
 
