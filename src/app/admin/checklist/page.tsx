@@ -45,9 +45,9 @@ const DATA: Category[] = [
     { id: 'google_reviews', title: 'Google Reviews', why: "Reviews on Google help you show up in local searches. We\u2019ll give you the exact text to send past clients.", priority: 'important', difficulty: 'medium', actionType: 'instructions', actionLabel: 'Get the Template', impactScore: 8, easeScore: 5, status: 'not_started' },
   ]},
   { id: 'company', title: 'Tell Your Story', icon: Building2, desc: "People hire people they trust. Your 25+ year story IS your selling point.", items: [
-    { id: 'story', title: 'Your Story \u2014 How RO Got Started', why: "Commercial clients aren't just hiring a company \u2014 they're hiring YOU. Your experience and reputation need to be on the site.", priority: 'important', difficulty: 'easy', actionType: 'link', actionLabel: 'Tell Your Story', actionHref: '/admin/checklist/company', impactScore: 7, easeScore: 6, status: 'not_started' },
-    { id: 'team_photo', title: 'Team Photo or Headshot', why: "Puts a face to the name. Developers want to know who they're working with.", priority: 'important', difficulty: 'easy', actionType: 'upload', actionLabel: 'Upload Photo', uploadAccept: 'image/*', uploadType: 'image', impactScore: 6, easeScore: 8, status: 'not_started' },
-    { id: 'licenses', title: 'Licenses & Certifications', why: "Shows you're legit and insured. Commercial developers require this.", priority: 'important', difficulty: 'easy', actionType: 'link', actionLabel: 'Enter Credentials', actionHref: '/admin/checklist/company', impactScore: 7, easeScore: 8, status: 'not_started' },
+    { id: 'story', title: 'Your Story \u2014 How RO Got Started', why: "Commercial clients are not just hiring a company \u2014 they are hiring YOU. Your experience and reputation need to be on the site.", priority: 'important', difficulty: 'easy', actionType: 'link', actionLabel: 'Tell Your Story', actionHref: '/admin/checklist/company', impactScore: 7, easeScore: 6, status: 'not_started' },
+    { id: 'team_photo', title: 'Team Photo or Headshot', why: "Puts a face to the name. Developers want to know who they are working with.", priority: 'important', difficulty: 'easy', actionType: 'upload', actionLabel: 'Upload Photo', uploadAccept: 'image/*', uploadType: 'image', impactScore: 6, easeScore: 8, status: 'not_started' },
+    { id: 'licenses', title: 'Licenses & Certifications', why: "Shows you are legit and insured. Commercial developers require this.", priority: 'important', difficulty: 'easy', actionType: 'link', actionLabel: 'Enter Credentials', actionHref: '/admin/checklist/company', impactScore: 7, easeScore: 8, status: 'not_started' },
     { id: 'service_area', title: 'Service Area Details', why: "Which cities and counties you cover. Helps people in your area find you.", priority: 'important', difficulty: 'easy', actionType: 'link', actionLabel: 'Set Service Area', actionHref: '/admin/checklist/company', impactScore: 6, easeScore: 9, status: 'not_started' },
   ]},
   { id: 'nexa', title: 'NexaVision Is On It', icon: Zap, desc: "We're building these. No action needed from you.", items: [
@@ -96,7 +96,7 @@ export default function ChecklistPage() {
   const textConfigs: Record<string, { title: string; description: string; fields: { id: string; label: string; placeholder: string; type?: 'text' | 'password' | 'email' }[] }> = {
     domain_login: {
       title: 'GoDaddy Login',
-      description: "We'll use this to connect rounlimited.com to your website.",
+      description: "We will use this to connect rounlimited.com to your website.",
       fields: [
         { id: 'provider', label: 'Where did you buy the domain?', placeholder: 'GoDaddy, Google Domains, etc.', type: 'text' },
         { id: 'email', label: 'Login Email or Username', placeholder: 'your@email.com', type: 'email' },
@@ -133,7 +133,7 @@ export default function ChecklistPage() {
       description: 'Send this text to 3-5 past clients. It takes them 60 seconds.',
       steps: [
         { text: 'Copy the message below and text it to a few past clients who were happy with your work.' },
-        { text: 'Here\u2019s what to send them:', copyText: 'Hey! Quick favor — would you mind leaving us a quick Google review? It really helps us out. Just click this link and tap the stars: [We\u2019ll add your Google review link here once your Business Profile is set up]. Thanks!' },
+        { text: 'Here\u2019s what to send them:', copyText: 'Hey! Quick favor  -  would you mind leaving us a quick Google review? It really helps us out. Just click this link and tap the stars: [We\u2019ll add your Google review link here once your Business Profile is set up]. Thanks!' },
         { text: 'Even 3-5 reviews makes a huge difference for showing up in local searches.' },
         { text: 'Once your Google Business Profile is connected (Step 1 above), we\u2019ll give you the exact link to include in that message.' },
       ],
