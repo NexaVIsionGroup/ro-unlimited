@@ -39,7 +39,7 @@
   /* GSAP initial states handled by gsap.set() in useGSAP - no CSS classes needed */
 }
 
-/* ��� Reduced motion: handled by GSAPProvider.tsx via matchMedia ���
+/* ��������� Reduced motion: handled by GSAPProvider.tsx via matchMedia ���������
  * GSAP animations are controlled entirely by JavaScript.
  * CSS !important rules on opacity/transform/transition-duration
  * conflict with GSAP's inline style updates. Reduced motion
@@ -61,4 +61,13 @@ body.admin-mode .loading-sequence-overlay {
 }
 body.admin-mode main {
   min-height: 100vh;
+}
+
+
+/* Admin checklist card scan line */
+@keyframes scanLine {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(500%); opacity: 0; }
 }

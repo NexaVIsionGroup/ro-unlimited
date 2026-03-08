@@ -42,7 +42,7 @@ export default function AdminDashboard() {
         );
       }
 
-      // Launch Checklist card — industrial attention-grab sequence
+      // Launch Checklist card �?" industrial attention-grab sequence
       if (checklistRef.current) {
         const card = checklistRef.current;
         const tl = gsap.timeline({ delay: 1.2 });
@@ -198,7 +198,7 @@ export default function AdminDashboard() {
               ref={card.title === 'Launch Checklist' ? checklistRef : undefined}
               className={`group bg-[#111] border rounded-lg p-6 transition-all hover:bg-[#111]/80 ${
                 card.title === 'Launch Checklist'
-                  ? 'border-[#C9A84C]/15 col-span-2 relative overflow-hidden'
+                  ? 'border-[#C9A84C]/20 col-span-2 relative overflow-hidden'
                   : 'border-white/5 hover:border-[#C9A84C]/20'
               }`}
             >
@@ -206,7 +206,7 @@ export default function AdminDashboard() {
                 <div className="w-10 h-10 bg-white/5 group-hover:bg-[#C9A84C]/10 flex items-center justify-center rounded transition-colors">
                   <card.icon size={18} className="text-white/30 group-hover:text-[#C9A84C] transition-colors" />
                 </div>
-                <span className={`text-[10px] font-mono ${card.statusColor}`}>{card.status}</span>
+                <span className={`text-[10px] font-mono ${card.statusColor}`} {...(card.title === 'Launch Checklist' ? {'data-checklist-status': true} : {})}>{card.status}</span>
               </div>
               <h2 className={`text-base font-semibold mb-1 transition-colors ${card.title === 'Launch Checklist' ? 'text-[#C9A84C] text-lg' : 'group-hover:text-[#C9A84C]'}`}>{card.title}</h2>
               <p className="text-xs text-white/30 leading-relaxed">{card.description}</p>
@@ -217,5 +217,6 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
 
 
