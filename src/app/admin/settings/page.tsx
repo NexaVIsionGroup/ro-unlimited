@@ -3,7 +3,67 @@
 import { useState, useEffect } from 'react';
 import AdminHeader from '@/components/admin/AdminHeader';
 import { createClient } from '@/lib/supabase/client';
-import { UserPlus, Trash2, Copy, Check, Shield, User, Loader2, X, Mail, Clock, ShieldCheck } from 'lucide-react';
+import { UserPlus, Trash2, Copy, Check, Shield, User, Loader2, X, Mail, Clock, ShieldCheck, Send, Link2, Share2 } from 'lucide-react';
+
+function ShareLoginLink() {
+  const [copied, setCopied] = useState(false);
+  const loginUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/admin/login`
+    : 'https://rounlimited.nexavisiongroup.com/admin/login';
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(loginUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareViaText = () => {
+    const msg = `Sign in to the RO Unlimited admin portal:\n${loginUrl}`;
+    // Try native share first (works great on mobile)
+    if (navigator.share) {
+      navigator.share({ title: 'RO Unlimited Admin Login', text: msg, url: loginUrl }).catch(() => {});
+    } else {
+      // Fallback: open SMS with prefilled message
+      window.open(`sms:?body=${encodeURIComponent(msg)}`, '_blank');
+    }
+  };
+
+  return (
+    <section className="bg-[#111] border border-white/5 rounded-xl overflow-hidden mb-6">
+      <div className="px-6 py-4 border-b border-white/5 flex items-center gap-3">
+        <div className="w-9 h-9 bg-[#C9A84C]/10 rounded-lg flex items-center justify-center">
+          <Link2 size={16} className="text-[#C9A84C]" />
+        </div>
+        <div>
+          <h2 className="text-sm font-semibold">Share Login Link</h2>
+          <p className="text-[11px] text-white/25">Send this link so users can sign in</p>
+        </div>
+      </div>
+      <div className="px-6 py-4">
+        <div className="flex gap-2 mb-3">
+          <input
+            type="text"
+            value={loginUrl}
+            readOnly
+            className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/50 font-mono truncate"
+          />
+          <button
+            onClick={copyLink}
+            className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white/60 hover:bg-white/10 transition-colors flex items-center gap-1.5 flex-shrink-0"
+          >
+            {copied ? <><Check size={12} className="text-green-400" /> Copied</> : <><Copy size={12} /> Copy</>}
+          </button>
+        </div>
+        <button
+          onClick={shareViaText}
+          className="w-full py-2.5 bg-[#C9A84C] text-black font-semibold text-xs rounded-lg hover:bg-[#d4b55a] transition-colors flex items-center justify-center gap-2"
+        >
+          <Share2 size={14} /> Send Login Link
+        </button>
+      </div>
+    </section>
+  );
+}
 
 interface AdminUser {
   id: string;
@@ -123,6 +183,11 @@ export default function SettingsPage() {
             <div className="flex items-center gap-2">{message.type === 'success' ? <Check size={14} /> : <X size={14} />}{message.text}</div>
             <button onClick={() => setMessage(null)} className="opacity-50 hover:opacity-100"><X size={14} /></button>
           </div>
+        )}
+
+        {/* Share Login Link */}
+        {isNexa && (
+          <ShareLoginLink />
         )}
 
         {/* Invite Link Display */}
