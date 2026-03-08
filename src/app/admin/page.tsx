@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Pencil, Mail, Camera, Settings, ExternalLink, Video, Image, FileText } from 'lucide-react';
+import { Pencil, Mail, Camera, Settings, ExternalLink, Video, Image, FileText, ClipboardList } from 'lucide-react';
 
 interface SiteSettings {
   heroVideoUrl?: string;
@@ -19,6 +19,15 @@ export default function AdminDashboard() {
   }, []);
 
   const cards = [
+    {
+      title: 'Launch Checklist',
+      description: 'Everything needed to get your site 100% launch ready.',
+      href: '/admin/checklist',
+      icon: ClipboardList,
+      status: 'Action needed',
+      statusColor: 'text-[#C9A84C]',
+      accent: '#C9A84C',
+    },
     {
       title: 'Site Editor',
       description: 'Upload hero video, division videos, and manage media.',
@@ -132,3 +141,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
