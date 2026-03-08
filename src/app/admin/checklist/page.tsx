@@ -42,7 +42,7 @@ const DATA: Category[] = [
     { id: 'written_test', title: 'Client Testimonials (3-5)', why: "A few short quotes from happy clients make a massive difference. Even something simple like \"RO built our building on time and on budget\" works.", priority: 'critical', difficulty: 'easy', actionType: 'link', actionLabel: 'Add Testimonials', actionHref: '/admin/checklist/testimonials', impactScore: 9, easeScore: 7, status: 'not_started' },
     { id: 'screenshots', title: 'Screenshots of Texts or Emails', why: "If a client ever texted or emailed something nice about your work, screenshot it and upload it. Real messages feel more authentic.", priority: 'important', difficulty: 'easy', actionType: 'upload', actionLabel: 'Upload Screenshots', uploadAccept: 'image/*', uploadType: 'image', impactScore: 7, easeScore: 9, status: 'not_started' },
     { id: 'video_test', title: 'Video Testimonial', why: "A 30-second iPhone video of a happy client is worth more than any ad you could buy.", priority: 'nice', difficulty: 'hard', actionType: 'upload', actionLabel: 'Upload Video', uploadAccept: 'video/*', uploadType: 'video', impactScore: 8, easeScore: 3, status: 'not_started' },
-    { id: 'google_reviews', title: 'Google Reviews', why: "Reviews on Google help you show up in local searches. We'll give you the exact text to send past clients.", priority: 'important', difficulty: 'medium', actionType: 'instructions', actionLabel: 'Get the Template', impactScore: 8, easeScore: 5, status: 'not_started' },
+    { id: 'google_reviews', title: 'Google Reviews', why: "Reviews on Google help you show up in local searches. We\u2019ll give you the exact text to send past clients.", priority: 'important', difficulty: 'medium', actionType: 'instructions', actionLabel: 'Get the Template', impactScore: 8, easeScore: 5, status: 'not_started' },
   ]},
   { id: 'company', title: 'Tell Your Story', icon: Building2, desc: "People hire people they trust. Your 25+ year story IS your selling point.", items: [
     { id: 'story', title: 'Your Story \u2014 How RO Got Started', why: "Commercial clients aren't just hiring a company \u2014 they're hiring YOU. Your experience and reputation need to be on the site.", priority: 'important', difficulty: 'easy', actionType: 'link', actionLabel: 'Tell Your Story', actionHref: '/admin/checklist/company', impactScore: 7, easeScore: 6, status: 'not_started' },
@@ -111,10 +111,10 @@ export default function ChecklistPage() {
       description: 'Follow these steps to give us access.',
       steps: [
         { text: 'Open Google Business Profile Manager on your phone or computer.', link: 'https://business.google.com' },
-        { text: 'If you don't have one yet, tap "Add your business" and follow the steps to create one. Use "RO Unlimited Contractor & Developer" as the business name.' },
-        { text: 'Once you're in, tap the three dots menu (top right) and select "Business Profile settings".' },
+        { text: 'If you don\u2019t have one yet, tap "Add your business" and follow the steps to create one. Use "RO Unlimited Contractor & Developer" as the business name.' },
+        { text: 'Once you\u2019re in, tap the three dots menu (top right) and select "Business Profile settings".' },
         { text: 'Tap "Managers" then "Add" and type in this email:', copyText: 'admin@nexavisiongroup.com' },
-        { text: 'Select "Manager" as the role and send the invite. That's it! We'll handle everything from there.' },
+        { text: 'Select "Manager" as the role and send the invite. That\u2019s it! We\u2019ll handle everything from there.' },
       ],
     },
     facebook: {
@@ -125,7 +125,7 @@ export default function ChecklistPage() {
         { text: 'Tap the three dots (...) at the top and select "Page Settings".' },
         { text: 'Tap "Page Access" or "New Pages Experience" then "Add New".' },
         { text: 'Search for and add this email as an Admin:', copyText: 'admin@nexavisiongroup.com' },
-        { text: 'Confirm the invite. We'll connect it to your website.' },
+        { text: 'Confirm the invite. We\u2019ll connect it to your website.' },
       ],
     },
     google_reviews: {
@@ -133,9 +133,9 @@ export default function ChecklistPage() {
       description: 'Send this text to 3-5 past clients. It takes them 60 seconds.',
       steps: [
         { text: 'Copy the message below and text it to a few past clients who were happy with your work.' },
-        { text: 'Here's what to send them:', copyText: 'Hey! Quick favor — would you mind leaving us a quick Google review? It really helps us out. Just click this link and tap the stars: [We'll add your Google review link here once your Business Profile is set up]. Thanks!' },
+        { text: 'Here's what to send them:', copyText: 'Hey! Quick favor — would you mind leaving us a quick Google review? It really helps us out. Just click this link and tap the stars: [We\u2019ll add your Google review link here once your Business Profile is set up]. Thanks!' },
         { text: 'Even 3-5 reviews makes a huge difference for showing up in local searches.' },
-        { text: 'Once your Google Business Profile is connected (Step 1 above), we'll give you the exact link to include in that message.' },
+        { text: 'Once your Google Business Profile is connected (Step 1 above), we\u2019ll give you the exact link to include in that message.' },
       ],
     },
   };
