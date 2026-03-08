@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sanityWriteClient } from '@/lib/sanity/client';
 
-// Next.js 14+ route segment config
+// Route segment config for large uploads
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
