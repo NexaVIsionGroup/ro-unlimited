@@ -185,7 +185,15 @@ export default function ChecklistPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
-      <AdminHeader title="Launch Checklist" subtitle="Get your site 100% ready for launch" backHref="/admin" />
+      <div className="px-4 pt-4 pb-2 flex items-center gap-3">
+        <button onClick={() => window.history.back()} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/30">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div>
+          <h2 className="text-lg font-bold text-white">Launch Checklist</h2>
+          <p className="text-[10px] text-white/30 uppercase tracking-wider">Get your site 100% ready</p>
+        </div>
+      </div>
       <div className="max-w-4xl mx-auto px-6 py-8">
 
         {/* Progress */}
