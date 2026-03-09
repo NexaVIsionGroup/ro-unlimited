@@ -10,24 +10,19 @@ export default function Navbar() {
   const pathname = usePathname();
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-ro-black/95 backdrop-blur-sm border-b border-ro-gold/10">
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
+
+          {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              <div className="w-12 h-12 border-2 border-ro-gold flex items-center justify-center bg-ro-black group-hover:bg-ro-gold/10 transition-colors duration-300">
-                <span className="text-ro-gold font-heading text-xl font-bold">RO</span>
-              </div>
-              <div className="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-ro-gold/40" />
-              <div className="absolute -top-1 -right-1 w-2 h-2 border-t-2 border-r-2 border-ro-gold/40" />
-              <div className="absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2 border-ro-gold/40" />
-              <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-ro-gold/40" />
-            </div>
-            <div className="hidden sm:block">
-              <div className="text-ro-white font-heading text-lg tracking-wider uppercase leading-none">RO Unlimited</div>
-              <div className="text-ro-gold/60 text-xs tracking-[0.2em] uppercase font-body">Contractor & Developer</div>
-            </div>
+            <img
+              src="/ro-unlimited-logo.svg"
+              alt="RO Unlimited"
+              className="h-10 w-auto object-contain"
+              style={{ maxWidth: '200px' }}
+            />
           </Link>
+
           <div className="hidden lg:flex items-center gap-1">
             {NAV_LINKS.map((link) => {
               const isActive = pathname === link.href;
@@ -40,6 +35,7 @@ export default function Navbar() {
               );
             })}
           </div>
+
           <div className="hidden lg:flex items-center gap-4">
             <a href={`tel:${COMPANY.phone.replace(/[^0-9]/g, '')}`}
               className="flex items-center gap-2 text-ro-gray-400 hover:text-ro-gold transition-colors text-sm">
@@ -50,11 +46,14 @@ export default function Navbar() {
               Get a Quote
             </Link>
           </div>
+
           <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden text-ro-gold p-2" aria-label="Toggle menu">
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
+
+      {/* Mobile menu */}
       <div className={`lg:hidden overflow-hidden transition-all duration-500 ease-out ${isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="bg-ro-black border-t border-ro-gold/10 px-4 py-6 space-y-1">
           {NAV_LINKS.map((link) => {

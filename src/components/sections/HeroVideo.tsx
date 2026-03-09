@@ -4,32 +4,52 @@ import { useState, useRef, useEffect } from 'react';
 
 interface HeroVideoProps {
   videoUrl: string | null;
+  onReady?: () => void; // fires after 2s of play, triggering build sequence
 }
 
-export default function HeroVideo({ videoUrl }: HeroVideoProps) {
+export default function HeroVideo({ videoUrl, onReady }: HeroVideoProps) {
   const [loaded, setLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const firedRef = useRef(false);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !videoUrl) return;
-
-    const handleLoaded = () => setLoaded(true);
-
-    // If already loaded (cached), set immediately
-    if (video.readyState >= 3) {
-      setLoaded(true);
+    if (!video || !videoUrl) {
+      // No video — fire immediately so build doesn't wait forever
+      onReady?.();
       return;
     }
 
-    video.addEventListener('loadeddata', handleLoaded);
-    video.addEventListener('canplay', handleLoaded);
+    const startTimer = () => {
+      if (firedRef.current) return;
+      setLoaded(true);
+      // Let the video breathe for 2 seconds, then start the build
+      setTimeout(() => {
+        firedRef.current = true;
+        onReady?.();
+      }, 2000);
+    };
+
+    if (video.readyState >= 3) {
+      startTimer();
+      return;
+    }
+
+    video.addEventListener('canplay', startTimer, { once: true });
+    video.addEventListener('loadeddata', startTimer, { once: true });
 
     return () => {
-      video.removeEventListener('loadeddata', handleLoaded);
-      video.removeEventListener('canplay', handleLoaded);
+      video.removeEventListener('canplay', startTimer);
+      video.removeEventListener('loadeddata', startTimer);
     };
-  }, [videoUrl]);
+  }, [videoUrl, onReady]);
+
+  // No video — signal immediately on mount
+  useEffect(() => {
+    if (!videoUrl) {
+      onReady?.();
+    }
+  }, [videoUrl, onReady]);
 
   if (!videoUrl) return null;
 
