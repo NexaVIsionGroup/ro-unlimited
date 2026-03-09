@@ -9,11 +9,16 @@
     --ro-gold-light: #D4B965;
     --ro-gold-dark: #A88A3D;
     --ro-white: #FFFFFF;
+    --ro-navy: #0F1F3D;
+    --ro-navy-mid: #1B3060;
+    --ro-navy-accent: #2A4A8A;
+    --neon-gold: #FFD060;
+    --neon-blue: #00D4FF;
+    --neon-navy: #4488FF;
     --font-heading: 'Oswald', sans-serif;
     --font-body: 'Barlow', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
   }
-  /* scroll-behavior: smooth removed - conflicts with GSAP ScrollTrigger pin calculations */
   html { scroll-behavior: auto; }
   body {
     @apply bg-ro-black text-ro-white font-body;
@@ -36,41 +41,147 @@
   .caution-stripe {
     background: repeating-linear-gradient(-45deg, #C9A84C, #C9A84C 10px, #1A1A1A 10px, #1A1A1A 20px);
   }
-  /* GSAP initial states handled by gsap.set() in useGSAP - no CSS classes needed */
-}
 
-/* ��������� Reduced motion: handled by GSAPProvider.tsx via matchMedia ���������
- * GSAP animations are controlled entirely by JavaScript.
- * CSS !important rules on opacity/transform/transition-duration
- * conflict with GSAP's inline style updates. Reduced motion
- * preference is detected in GSAPProvider and skips animations. */
+  /* ── Neon card base ── */
+  .card-navy {
+    background: #0F1F3D;
+    border: 1px solid rgba(42,74,138,0.35);
+  }
+  .card-navy-raised {
+    background: #1B3060;
+    border: 1px solid rgba(42,74,138,0.5);
+  }
+
+  /* ── Neon glow utilities ── */
+  .neon-gold {
+    box-shadow: 0 0 8px rgba(255,208,96,0.6), 0 0 24px rgba(201,168,76,0.4), 0 0 48px rgba(201,168,76,0.15);
+  }
+  .neon-blue {
+    box-shadow: 0 0 8px rgba(0,212,255,0.6), 0 0 24px rgba(0,170,238,0.4), 0 0 48px rgba(0,119,204,0.15);
+  }
+  .neon-navy {
+    box-shadow: 0 0 8px rgba(68,136,255,0.5), 0 0 20px rgba(42,74,138,0.4), 0 0 40px rgba(15,31,61,0.3);
+  }
+  .neon-emerald {
+    box-shadow: 0 0 8px rgba(52,211,153,0.5), 0 0 20px rgba(16,185,129,0.3);
+  }
+  .text-neon-gold {
+    color: #FFD060;
+    text-shadow: 0 0 8px rgba(255,208,96,0.8), 0 0 20px rgba(201,168,76,0.5);
+  }
+  .text-neon-blue {
+    color: #00D4FF;
+    text-shadow: 0 0 8px rgba(0,212,255,0.8), 0 0 20px rgba(0,170,238,0.5);
+  }
+  .border-neon-gold {
+    border-color: rgba(255,208,96,0.5);
+    box-shadow: 0 0 0 1px rgba(255,208,96,0.15), inset 0 0 12px rgba(255,208,96,0.04);
+  }
+  .border-neon-blue {
+    border-color: rgba(0,212,255,0.4);
+    box-shadow: 0 0 0 1px rgba(0,212,255,0.1), inset 0 0 12px rgba(0,212,255,0.04);
+  }
+}
 
 @layer utilities {
   .text-shadow-gold { text-shadow: 0 0 20px rgba(201,168,76,0.3), 0 0 40px rgba(201,168,76,0.1); }
   .border-gold-glow { box-shadow: 0 0 15px rgba(201,168,76,0.15), inset 0 0 15px rgba(201,168,76,0.05); }
   .gradient-text-gold { @apply bg-clip-text text-transparent bg-gradient-to-r from-ro-gold-dark via-ro-gold to-ro-gold-light; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
+/* ═══════════════════════════════════════
+   NEON KEYFRAME ANIMATIONS
+═══════════════════════════════════════ */
 
-/* Admin mode - hide site chrome */
+/* Gold neon pulse — buttons, CTAs */
+@keyframes neonGoldPulse {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(255,208,96,0.5), 0 0 18px rgba(201,168,76,0.35), 0 0 36px rgba(201,168,76,0.1);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(255,208,96,0.8), 0 0 32px rgba(201,168,76,0.55), 0 0 60px rgba(201,168,76,0.2);
+  }
+}
+.animate-neon-gold { animation: neonGoldPulse 2.2s ease-in-out infinite; }
+
+/* Blue neon pulse — structural accents */
+@keyframes neonBluePulse {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(0,212,255,0.4), 0 0 18px rgba(0,170,238,0.25), 0 0 36px rgba(0,119,204,0.08);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(0,212,255,0.7), 0 0 36px rgba(0,170,238,0.45), 0 0 60px rgba(0,119,204,0.15);
+  }
+}
+.animate-neon-blue { animation: neonBluePulse 2.8s ease-in-out infinite; }
+
+/* Neon border shimmer — navy cards on hover */
+@keyframes neonBorderShimmer {
+  0%   { border-color: rgba(42,74,138,0.3); box-shadow: 0 0 0 rgba(68,136,255,0); }
+  50%  { border-color: rgba(68,136,255,0.6); box-shadow: 0 0 16px rgba(68,136,255,0.2); }
+  100% { border-color: rgba(42,74,138,0.3); box-shadow: 0 0 0 rgba(68,136,255,0); }
+}
+.hover\:animate-neon-border:hover { animation: neonBorderShimmer 1.5s ease-in-out; }
+
+/* Status badge — "Under Review" gold pulse */
+@keyframes reviewPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 4px rgba(255,208,96,0.4); }
+  50%       { opacity: 0.7; box-shadow: 0 0 12px rgba(255,208,96,0.7); }
+}
+.animate-review-pulse { animation: reviewPulse 1.8s ease-in-out infinite; }
+
+/* Live badge — emerald breathe */
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(52,211,153,0.4); }
+  50%       { box-shadow: 0 0 12px rgba(52,211,153,0.7); }
+}
+.animate-live-pulse { animation: livePulse 2.0s ease-in-out infinite; }
+
+/* NexaVision orbit ring */
+@keyframes orbitSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-orbit { animation: orbitSpin 4s linear infinite; }
+
+/* Section card entrance */
+@keyframes cardSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-card-up { animation: cardSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
+
+/* Scan line sweep */
+@keyframes scanLine {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(500%); opacity: 0; }
+}
+
+/* Division left-border glow */
+@keyframes divisionGlow {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; box-shadow: 0 0 8px currentColor; }
+}
+.animate-division-glow { animation: divisionGlow 3s ease-in-out infinite; }
+
+/* Menu button gold pulse (AppShell) */
+@keyframes menuPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 1; transform: scale(1.18); }
+}
+
+/* ═══════════════════════════════════════
+   ADMIN CHROME OVERRIDES
+═══════════════════════════════════════ */
 body.admin-mode nav.fixed.z-50,
 body.admin-mode footer.relative,
 body.admin-mode .progress-bar,
 body.admin-mode .loading-sequence-overlay {
   display: none !important;
 }
-body.admin-mode {
-  overflow: hidden !important;
-}
-body.admin-mode > div > div > div > main.min-h-screen {
-  min-height: auto !important;
-}
-
-
-/* Admin checklist card scan line */
-@keyframes scanLine {
-  0% { transform: translateY(-100%); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { transform: translateY(500%); opacity: 0; }
-}
+body.admin-mode { overflow: hidden !important; }
+body.admin-mode > div > div > div > main.min-h-screen { min-height: auto !important; }
