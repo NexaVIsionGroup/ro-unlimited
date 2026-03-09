@@ -23,12 +23,18 @@ const ICONS: Record<string, any> = {
  *   2. Squish compression — card below deforms slightly as pressure builds
  *   3. Pressure glow — gold border intensifies as scroll approaches threshold
  *   4. Elastic spring-back — overshoots slightly when snapping back (real spring feel)
+ *
+ * Watermark reveal:
+ *   As the final card collapses, the RO icon watermark + slogan fade in
+ *   progressively in the dead space below the cards. Opacity ramps from
+ *   ~5% (card open) to 100% (fully collapsed), filling the void with brand.
  */
 export default function DivisionCards() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const spacerRef = useRef<HTMLDivElement>(null);
+  const sectionRef  = useRef<HTMLDivElement>(null);
+  const stageRef    = useRef<HTMLDivElement>(null);
+  const cardRefs    = useRef<(HTMLDivElement | null)[]>([]);
+  const spacerRef   = useRef<HTMLDivElement>(null);
+  const watermarkRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
     if (!spacerRef.current) return;
@@ -76,42 +82,39 @@ export default function DivisionCards() {
 
     // ── Desktop scroll physics ─────────────────────────────────────────
     const allCards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
-    const bodies = allCards.map(c => c.querySelector('.card-body') as HTMLElement).filter(Boolean);
-    const links  = allCards.map(c => c.querySelector('a') as HTMLElement).filter(Boolean);
+    const bodies   = allCards.map(c => c.querySelector('.card-body') as HTMLElement).filter(Boolean);
+    const links    = allCards.map(c => c.querySelector('a') as HTMLElement).filter(Boolean);
+    const totalCards  = allCards.length;
+    const collapseUnit = 1 / totalCards;
 
-    // Collapse unit: each card owns an equal slice of the timeline
-    const collapseUnit = 1 / allCards.length;
+    // Set watermark to near-invisible on init
+    if (watermarkRef.current) {
+      gsap.set(watermarkRef.current, { opacity: 0.05, y: 18 });
+    }
 
-    // ── PHYSICS EFFECT 3: Pressure glow + squish via ScrollTrigger onUpdate ──
-    // We track scroll progress within each card's window and drive
-    // live border glow & squish on the next card proportionally.
+    // ── PHYSICS: Pressure glow + squish + watermark reveal via onUpdate ──
     ScrollTrigger.create({
       trigger: spacerRef.current,
       start: 'top top',
       end: 'bottom bottom',
       onUpdate: (self) => {
-        const progress = self.progress; // 0 → 1 across the whole section
+        const progress = self.progress;
 
         allCards.forEach((card, i) => {
           const link = links[i];
           const windowStart = i * collapseUnit;
-          const windowEnd   = (i + 1) * collapseUnit;
-
-          // How far into this card's collapse window are we? (0–1)
           const localProgress = Math.max(0, Math.min(1,
             (progress - windowStart) / collapseUnit
           ));
 
-          // ── PHYSICS EFFECT 2: Pressure glow ──
-          // Border + glow intensify as we approach the 50% snap threshold.
-          // Peaks at ~50% progress (the decision point), fades after commit.
+          // ── Pressure glow ──
           const glowIntensity = localProgress < 0.5
-            ? localProgress * 2           // ramp up 0 → 1 as we approach threshold
-            : (1 - localProgress) * 2;    // ramp down after commit
+            ? localProgress * 2
+            : (1 - localProgress) * 2;
 
-          const goldOpacity  = 0.2 + (glowIntensity * 0.6);  // 0.2 → 0.8
-          const glowStrength = glowIntensity * 12;            // 0 → 12px spread
-          const glowAlpha    = glowIntensity * 0.5;           // 0 → 0.5 opacity
+          const goldOpacity  = 0.2 + (glowIntensity * 0.6);
+          const glowStrength = glowIntensity * 12;
+          const glowAlpha    = glowIntensity * 0.5;
 
           if (link) {
             link.style.borderColor = `rgba(201,168,76,${goldOpacity})`;
@@ -120,23 +123,36 @@ export default function DivisionCards() {
               : '';
           }
 
-          // ── PHYSICS EFFECT 1: Squish compression ──
-          // The card BELOW the one being collapsed gets a subtle squeeze
-          // proportional to how much pressure is building.
-          // Peaks at ~40% progress (before commit), releases on collapse.
+          // ── Squish compression on next card ──
           const nextCard = allCards[i + 1];
           if (nextCard) {
             const squishAmount = localProgress < 0.4
-              ? localProgress / 0.4          // ramp up: 0 → 1
-              : Math.max(0, 1 - ((localProgress - 0.4) / 0.6)); // ramp down after
-
-            const squishScale = 1 - (squishAmount * 0.025); // max 2.5% squeeze
-            gsap.set(nextCard, {
-              scaleY: squishScale,
-              transformOrigin: 'top center',
-            });
+              ? localProgress / 0.4
+              : Math.max(0, 1 - ((localProgress - 0.4) / 0.6));
+            const squishScale = 1 - (squishAmount * 0.025);
+            gsap.set(nextCard, { scaleY: squishScale, transformOrigin: 'top center' });
           }
         });
+
+        // ── Watermark reveal ──
+        // Tied to the LAST card's collapse window.
+        // Starts barely visible (0.05) when the last card begins collapsing,
+        // ramps to full opacity (1.0) as it finishes.
+        // Also lifts slightly upward (parallax feel) as it reveals.
+        if (watermarkRef.current) {
+          const lastWindow  = (totalCards - 1) * collapseUnit;
+          const lastProgress = Math.max(0, Math.min(1,
+            (progress - lastWindow) / collapseUnit
+          ));
+          // Opacity: 0.05 at start, exponential-ish ramp so it stays
+          // subtle until ~40% then blooms quickly — feels like light
+          // bleeding in rather than a linear fade.
+          const opacity = 0.05 + (Math.pow(lastProgress, 1.6) * 0.95);
+          const yOffset = 18 - (lastProgress * 18); // lifts 18px as it reveals
+
+          watermarkRef.current.style.opacity = String(opacity);
+          watermarkRef.current.style.transform = `translateY(${yOffset}px)`;
+        }
       },
     });
 
@@ -151,10 +167,6 @@ export default function DivisionCards() {
           snapTo: 'labels',
           delay: 0.6,
           duration: { min: 0.4, max: 1.0 },
-          // ── PHYSICS EFFECT 4: Elastic spring-back ──
-          // Forward commits use power2.inOut (deliberate, weighted).
-          // Spring-back uses elastic ease — real springs overshoot slightly
-          // before settling. The asymmetry is what makes it feel physical.
           ease: 'elastic.out(1, 0.5)',
           directionalEndThreshold: 0.5,
         },
@@ -168,7 +180,6 @@ export default function DivisionCards() {
 
       tl.addLabel(`card-${i}`);
 
-      // Body collapses
       tl.to(body, {
         height: 0,
         paddingBottom: 0,
@@ -177,15 +188,13 @@ export default function DivisionCards() {
         ease: 'power2.inOut',
       });
 
-      // Margin tightens simultaneously — use power2.inOut for the commit
-      // direction; spring-back handled by snap ease above
       tl.to(card, {
         marginBottom: 4,
         duration: collapseUnit,
         ease: 'power2.inOut',
       }, '<');
 
-      // Reset squish on the next card once this collapse completes
+      // Reset squish on next card after collapse commits
       const nextCard = allCards[i + 1];
       if (nextCard) {
         tl.to(nextCard, {
@@ -299,6 +308,57 @@ export default function DivisionCards() {
                 </div>
               );
             })}
+
+            {/* ── RO Watermark Reveal ─────────────────────────────────────────
+                Lives in the dead space below the collapsed cards.
+                Invisible while any card is open, blooms in as the last
+                card collapses. Opacity driven by scroll progress in onUpdate.
+                The stretched portrait aspect ratio (narrow + tall) gives it
+                weight and presence without competing with the cards above.
+            ──────────────────────────────────────────────────────────────── */}
+            <div
+              ref={watermarkRef}
+              className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none select-none"
+              style={{
+                top: 'calc(100% - 20px)',  // sits just below the last card
+                opacity: 0.05,
+                willChange: 'opacity, transform',
+              }}
+            >
+              {/* RO Icon — stretched tall, pure gold tint via mix-blend */}
+              <div
+                className="relative"
+                style={{ width: '120px', height: '200px' }}
+              >
+                <img
+                  src="/ro-icon.svg"
+                  alt=""
+                  className="w-full h-full"
+                  style={{
+                    objectFit: 'contain',
+                    filter: 'brightness(0) saturate(100%) invert(72%) sepia(33%) saturate(600%) hue-rotate(5deg) brightness(95%)',
+                    // ↑ renders the SVG as solid gold (#C9A84C equivalent)
+                  }}
+                />
+              </div>
+
+              {/* Slogan — tight tracking, all caps, confident */}
+              <div className="mt-3 text-center">
+                <p
+                  className="font-mono uppercase tracking-[0.35em] text-[10px] sm:text-[11px]"
+                  style={{ color: 'rgba(201,168,76,0.7)' }}
+                >
+                  Ground Up.
+                </p>
+                <p
+                  className="font-mono uppercase tracking-[0.35em] text-[10px] sm:text-[11px] mt-0.5"
+                  style={{ color: 'rgba(255,255,255,0.35)' }}
+                >
+                  No Shortcuts.
+                </p>
+              </div>
+            </div>
+
           </div>
 
           {/* Bottom spacer */}
