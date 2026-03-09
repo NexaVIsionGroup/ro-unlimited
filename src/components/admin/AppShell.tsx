@@ -456,7 +456,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             const Icon = tab.icon;
             if (tab.id === 'menu') {
               return (
-                <button key={tab.id} onClick={() => handleTab(tab.id)} className="flex flex-col items-center gap-1 relative -mt-5">
+                <button key={tab.id} onClick={() => handleTab(tab.id)} className="flex flex-col items-center gap-0.5 px-4 py-1 relative">
                   {/* Outer glow ring — pulses subtly */}
                   <span className="absolute inset-0 rounded-full" style={{
                     background: 'radial-gradient(circle, rgba(201,168,76,0.35) 0%, transparent 70%)',
