@@ -17,6 +17,22 @@ export default async function HomePage() {
 
   return (
     <>
+      {/*
+        Preload the hero video during the splash screen so it's buffered
+        and ready to play the instant ro:site-ready fires.
+        Next.js injects this as <link rel="preload"> in <head>.
+      */}
+      {heroVideoUrl && (
+        // eslint-disable-next-line @next/next/no-head-element
+        <link
+          rel="preload"
+          as="video"
+          href={heroVideoUrl}
+          // @ts-expect-error — fetchpriority is valid HTML but not in React types yet
+          fetchpriority="high"
+        />
+      )}
+
       <Hero heroVideoUrl={heroVideoUrl} />
       <SectionTransition label="FLOOR 01" sparks />
       <DivisionCards />

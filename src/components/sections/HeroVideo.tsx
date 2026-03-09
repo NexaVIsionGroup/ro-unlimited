@@ -9,9 +9,12 @@ interface HeroVideoProps {
 
 /**
  * Hero background video.
- * - Does NOT autoplay on mount.
- * - Waits for the 'ro:site-ready' event (fired by ROLoader when splash ends).
- * - Plays the video, then fires onReady after 2s so Hero can start its build sequence.
+ *
+ * Strategy:
+ * - Starts buffering immediately on mount (preload="auto") so video is
+ *   ready during the ROLoader splash — no stutter on play.
+ * - Does NOT autoplay. Waits for 'ro:site-ready' event before calling play().
+ * - After playing for 2s, fires onReady() so Hero can start its build sequence.
  * - If no video, fires onReady immediately when site-ready fires.
  */
 export default function HeroVideo({ videoUrl, onReady }: HeroVideoProps) {
@@ -19,48 +22,49 @@ export default function HeroVideo({ videoUrl, onReady }: HeroVideoProps) {
   const firedRef = useRef(false);
 
   useEffect(() => {
-    if (firedRef.current) return;
+    if (!videoUrl || !videoRef.current) {
+      // No video — fire onReady when site is ready (or immediately if already ready)
+      const fire = () => { if (!firedRef.current) { firedRef.current = true; onReady?.(); } };
+      if ((window as any).__roSiteReady) { fire(); return; }
+      window.addEventListener('ro:site-ready', fire, { once: true });
+      return () => window.removeEventListener('ro:site-ready', fire);
+    }
 
-    const startVideo = () => {
+    const video = videoRef.current;
+
+    // Kick off buffering NOW — browser downloads video bytes during the splash
+    // even though we won't call play() until ro:site-ready fires.
+    video.load();
+
+    const startPlayback = () => {
       if (firedRef.current) return;
+      video.play().catch(() => {});
+      // Let video breathe for 2s, then trigger the text build sequence
+      setTimeout(() => {
+        if (!firedRef.current) {
+          firedRef.current = true;
+          onReady?.();
+        }
+      }, 2000);
+    };
 
-      if (!videoUrl || !videoRef.current) {
-        // No video — fire onReady immediately after splash
-        firedRef.current = true;
-        onReady?.();
-        return;
-      }
-
-      const video = videoRef.current;
-
-      const beginPlay = () => {
-        video.play().catch(() => {});
-        // Let the video breathe for 2s, then trigger the text build
-        setTimeout(() => {
-          if (!firedRef.current) {
-            firedRef.current = true;
-            onReady?.();
-          }
-        }, 2000);
-      };
-
+    const onSiteReady = () => {
+      // If video is already buffered enough, play immediately
       if (video.readyState >= 3) {
-        beginPlay();
+        startPlayback();
       } else {
-        video.addEventListener('canplay', beginPlay, { once: true });
-        video.load(); // preload so canplay fires quickly
+        // Wait for enough data then play
+        video.addEventListener('canplay', startPlayback, { once: true });
       }
     };
 
-    // Already ready (e.g. reduced motion skipped splash immediately)
     if ((window as any).__roSiteReady) {
-      startVideo();
+      onSiteReady();
       return;
     }
 
-    // Wait for splash to complete
-    window.addEventListener('ro:site-ready', startVideo, { once: true });
-    return () => window.removeEventListener('ro:site-ready', startVideo);
+    window.addEventListener('ro:site-ready', onSiteReady, { once: true });
+    return () => window.removeEventListener('ro:site-ready', onSiteReady);
   }, [videoUrl, onReady]);
 
   if (!videoUrl) return null;
@@ -75,7 +79,6 @@ export default function HeroVideo({ videoUrl, onReady }: HeroVideoProps) {
         playsInline
         preload="auto"
         className="w-full h-full object-cover"
-        style={{ opacity: 1 }}
       />
     </div>
   );
