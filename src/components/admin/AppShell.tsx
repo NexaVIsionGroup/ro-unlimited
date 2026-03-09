@@ -427,17 +427,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="fixed top-0 left-0 right-0 bottom-0 bg-[#0a0a0a] flex flex-col overflow-hidden" style={{ height: '100dvh' }}>
-      {/* Watermark */}
-      <img
-        src="/ro-icon.svg"
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 m-auto pointer-events-none select-none"
-        style={{ opacity: 0.04, zIndex: 0, width: '80vw', height: '70vh', objectFit: 'fill' }}
-      />
       <div className="flex-shrink-0 h-[env(safe-area-inset-top)] bg-[#0a0a0a] relative z-10" />
 
-      <header className="flex-shrink-0 px-4 py-2.5 flex items-center justify-between bg-[#0f0f0f] border-b border-white/5 relative z-10">
+      <header data-admin-header className="flex-shrink-0 px-4 py-2.5 flex items-center justify-between bg-[#0f0f0f] border-b border-white/5 relative z-10">
         <div className="flex items-center gap-2">
           <img
             src="/ro-unlimited-logo.svg"

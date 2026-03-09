@@ -1,10 +1,7 @@
 import type { Metadata } from 'next';
 import { COMPANY } from '@/lib/constants';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
 import GSAPProvider from '@/components/animations/GSAPProvider';
-import ProgressBar from '@/components/animations/ProgressBar';
-import LoadingSequence from '@/components/animations/LoadingSequence';
+import ROLoader from '@/components/animations/ROLoader';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -22,12 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-body antialiased">
         <GSAPProvider>
-          <ProgressBar />
-          <LoadingSequence>
-            <Navbar />
-            <main className="min-h-screen">{children}</main>
-            <Footer />
-          </LoadingSequence>
+          <ROLoader>
+            {children}
+          </ROLoader>
         </GSAPProvider>
       </body>
     </html>
