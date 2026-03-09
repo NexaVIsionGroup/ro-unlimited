@@ -10,6 +10,12 @@ import Footer from '@/components/layout/Footer';
 /**
  * Shared RO loading screen for the main public site.
  * Admin routes are passed through untouched (admin has its own splash).
+ *
+ * When the splash completes, fires:
+ *   window.__roSiteReady = true
+ *   window.dispatchEvent(new Event('ro:site-ready'))
+ *
+ * Hero and HeroVideo listen for this before starting video + animations.
  */
 export default function ROLoader({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -22,8 +28,18 @@ export default function ROLoader({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Admin has its own splash — skip entirely
-    if (isAdmin) { setDone(true); return; }
-    if (reducedMotion) { setDone(true); return; }
+    if (isAdmin) {
+      setDone(true);
+      return;
+    }
+
+    // Reduced motion: skip splash, fire ready immediately
+    if (reducedMotion) {
+      setDone(true);
+      (window as any).__roSiteReady = true;
+      window.dispatchEvent(new Event('ro:site-ready'));
+      return;
+    }
 
     const ctx = gsap.context(() => {
       gsap.set(roRef.current, { opacity: 0, scale: 0.88 });
@@ -44,6 +60,9 @@ export default function ROLoader({ children }: { children: React.ReactNode }) {
           onComplete: () => {
             setDone(true);
             if (splashRef.current) splashRef.current.style.display = 'none';
+            // Signal to Hero + HeroVideo that they can start
+            (window as any).__roSiteReady = true;
+            window.dispatchEvent(new Event('ro:site-ready'));
           },
         }, '+=0.1');
     });

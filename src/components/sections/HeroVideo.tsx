@@ -1,54 +1,66 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
 interface HeroVideoProps {
   videoUrl: string | null;
-  onReady?: () => void; // fires after 2s of play, triggering build sequence
+  onReady?: () => void; // fires 2s after video starts playing
 }
 
+/**
+ * Hero background video.
+ * - Does NOT autoplay on mount.
+ * - Waits for the 'ro:site-ready' event (fired by ROLoader when splash ends).
+ * - Plays the video, then fires onReady after 2s so Hero can start its build sequence.
+ * - If no video, fires onReady immediately when site-ready fires.
+ */
 export default function HeroVideo({ videoUrl, onReady }: HeroVideoProps) {
-  const [loaded, setLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const firedRef = useRef(false);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !videoUrl) {
-      // No video — fire immediately so build doesn't wait forever
-      onReady?.();
-      return;
-    }
+    if (firedRef.current) return;
 
-    const startTimer = () => {
+    const startVideo = () => {
       if (firedRef.current) return;
-      setLoaded(true);
-      // Let the video breathe for 2 seconds, then start the build
-      setTimeout(() => {
+
+      if (!videoUrl || !videoRef.current) {
+        // No video — fire onReady immediately after splash
         firedRef.current = true;
         onReady?.();
-      }, 2000);
+        return;
+      }
+
+      const video = videoRef.current;
+
+      const beginPlay = () => {
+        video.play().catch(() => {});
+        // Let the video breathe for 2s, then trigger the text build
+        setTimeout(() => {
+          if (!firedRef.current) {
+            firedRef.current = true;
+            onReady?.();
+          }
+        }, 2000);
+      };
+
+      if (video.readyState >= 3) {
+        beginPlay();
+      } else {
+        video.addEventListener('canplay', beginPlay, { once: true });
+        video.load(); // preload so canplay fires quickly
+      }
     };
 
-    if (video.readyState >= 3) {
-      startTimer();
+    // Already ready (e.g. reduced motion skipped splash immediately)
+    if ((window as any).__roSiteReady) {
+      startVideo();
       return;
     }
 
-    video.addEventListener('canplay', startTimer, { once: true });
-    video.addEventListener('loadeddata', startTimer, { once: true });
-
-    return () => {
-      video.removeEventListener('canplay', startTimer);
-      video.removeEventListener('loadeddata', startTimer);
-    };
-  }, [videoUrl, onReady]);
-
-  // No video — signal immediately on mount
-  useEffect(() => {
-    if (!videoUrl) {
-      onReady?.();
-    }
+    // Wait for splash to complete
+    window.addEventListener('ro:site-ready', startVideo, { once: true });
+    return () => window.removeEventListener('ro:site-ready', startVideo);
   }, [videoUrl, onReady]);
 
   if (!videoUrl) return null;
@@ -58,13 +70,12 @@ export default function HeroVideo({ videoUrl, onReady }: HeroVideoProps) {
       <video
         ref={videoRef}
         src={videoUrl}
-        autoPlay
         muted
         loop
         playsInline
-        className={`w-full h-full object-cover transition-opacity duration-1000 ${
-          loaded ? 'opacity-100' : 'opacity-0'
-        }`}
+        preload="auto"
+        className="w-full h-full object-cover"
+        style={{ opacity: 1 }}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { COMPANY, TRUST_STATS } from '@/lib/constants';
 import { ArrowRight, Phone } from 'lucide-react';
@@ -11,10 +11,12 @@ import CountUp from '@/components/animations/CountUp';
 
 /**
  * HERO — Desktop: pinned scrub-linked construction sequence.
- * Mobile: hero video plays for 2s, then build sequence starts bottom-to-top:
+ * Mobile: ROLoader splash ends → video plays 2s → build sequence fires bottom-to-top:
  *   Phone → Gold CTA → Description → Gold line →
  *   FROM THE GROUND UP (chars) → EVERYTHING (scale) → WE BUILD (chars) → Badge
  *   Stats: ScrollTrigger on scroll.
+ *
+ * Nothing plays until window dispatches 'ro:site-ready'.
  */
 interface HeroProps {
   heroVideoUrl?: string | null;
@@ -33,10 +35,8 @@ export default function Hero({ heroVideoUrl }: HeroProps) {
   const spacerRef    = useRef<HTMLDivElement>(null);
 
   // Mobile timeline stored here, played when video signals ready
-  const mobileTlRef  = useRef<gsap.core.Timeline | null>(null);
-  // Whether mobile tl has been created yet (useGSAP runs async)
-  const tlReadyRef   = useRef(false);
-  // Whether video ready fired before tl was created
+  const mobileTlRef   = useRef<gsap.core.Timeline | null>(null);
+  const tlReadyRef    = useRef(false);
   const videoFiredRef = useRef(false);
 
   // Called by HeroVideo after 2s of play (or immediately if no video)
@@ -44,7 +44,6 @@ export default function Hero({ heroVideoUrl }: HeroProps) {
     if (tlReadyRef.current && mobileTlRef.current) {
       mobileTlRef.current.play();
     } else {
-      // tl not built yet — flag it so tl creation picks it up
       videoFiredRef.current = true;
     }
   }, []);
@@ -55,8 +54,8 @@ export default function Hero({ heroVideoUrl }: HeroProps) {
     const mm = gsap.matchMedia();
 
     // ═══════════════════════════════════════════════════════
-    // DESKTOP — Scrub-linked construction sequence
-    // Pinned hero builds bottom-to-top as you scroll spacer
+    // DESKTOP — Scrub-linked, starts invisible, reveals on scroll
+    // Everything hidden initially; ScrollTrigger handles reveal
     // ═══════════════════════════════════════════════════════
     mm.add(MEDIA_QUERIES.desktop, () => {
       if (!spacerRef.current) return;
@@ -139,10 +138,8 @@ export default function Hero({ heroVideoUrl }: HeroProps) {
     });
 
     // ═══════════════════════════════════════════════════════
-    // MOBILE — Triggered after video plays for 2s
-    // Order: Phone → CTA → Desc → Gold line →
-    //   FROM THE GROUND UP → EVERYTHING → WE BUILD → Badge
-    // Stats: ScrollTrigger.
+    // MOBILE — Paused until HeroVideo fires onReady (2s after video plays)
+    //          which itself only plays after 'ro:site-ready' fires
     // ═══════════════════════════════════════════════════════
     mm.add(MEDIA_QUERIES.mobile, () => {
       // Hide everything initially
@@ -151,21 +148,20 @@ export default function Hero({ heroVideoUrl }: HeroProps) {
         gsap.set(ctaRef.current.children, { opacity: 0 });
       }
 
-      // SplitText with mask — agency-standard char reveal
+      // SplitText mask reveal — agency-standard char animation
       const split3 = SplitText.create(line3Ref.current!, { type: 'chars', mask: 'chars' });
       const split1 = SplitText.create(line1Ref.current!, { type: 'chars', mask: 'chars' });
       gsap.set([split3.chars, split1.chars], { y: '110%', willChange: 'transform' });
 
-      // Description: line-by-line mask reveal
       const splitDesc = SplitText.create(descRef.current!, { type: 'lines', mask: 'lines' });
       gsap.set(splitDesc.lines, { y: '100%' });
 
-      // Build timeline PAUSED — will be played by handleVideoReady
+      // Build PAUSED — played by handleVideoReady
       const tl = gsap.timeline({ paused: true });
       mobileTlRef.current = tl;
       tlReadyRef.current = true;
 
-      // 1. Phone number — slides in from right (0s)
+      // 1. Phone number — slides in from right
       if (ctaRef.current?.children[1]) {
         tl.fromTo(ctaRef.current.children[1],
           { x: 60, opacity: 0 },
@@ -174,7 +170,7 @@ export default function Hero({ heroVideoUrl }: HeroProps) {
         );
       }
 
-      // 2. Gold CTA — steel beam wipe from left (0.15s)
+      // 2. Gold CTA — steel beam wipe from left
       if (ctaRef.current?.children[0]) {
         tl.fromTo(ctaRef.current.children[0],
           { clipPath: 'inset(0 100% 0 0)', opacity: 0 },
@@ -183,49 +179,48 @@ export default function Hero({ heroVideoUrl }: HeroProps) {
         );
       }
 
-      // 3. Description — lines rise from behind masks (0.5s)
+      // 3. Description — lines rise from behind masks
       tl.fromTo(splitDesc.lines,
         { y: '100%' },
         { y: '0%', stagger: 0.08, duration: 0.5, ease: 'power3.out' },
         0.5
       );
 
-      // 4. Gold weld line draws across (0.65s)
+      // 4. Gold weld line draws across
       tl.fromTo(goldLineRef.current,
         { scaleX: 0, opacity: 0, transformOrigin: 'left center' },
         { scaleX: 1, opacity: 1, duration: 0.35, ease: 'power2.inOut' },
         0.65
       );
 
-      // 5. "FROM THE GROUND UP" — chars rise from below baselines (0.9s)
+      // 5. "FROM THE GROUND UP" — chars rise from below
       tl.fromTo(split3.chars,
         { y: '110%' },
         { y: '0%', stagger: 0.02, duration: 0.45, ease: 'back.out(1.2)' },
         0.9
       );
 
-      // 6. "EVERYTHING" — scale punch from center (1.3s)
+      // 6. "EVERYTHING" — scale punch from center
       tl.fromTo(line2Ref.current,
         { scale: 0.3, opacity: 0 },
         { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(2)' },
         1.3
       );
 
-      // 7. "WE BUILD" — chars drop from above, center-out stagger (1.5s)
+      // 7. "WE BUILD" — chars drop from above, center-out stagger
       tl.fromTo(split1.chars,
         { y: '-110%' },
         { y: '0%', stagger: { each: 0.025, from: 'center' }, duration: 0.45, ease: 'back.out(1.5)' },
         1.5
       );
 
-      // 8. Badge — drops in from top (1.9s)
+      // 8. Badge — drops in from top
       tl.fromTo(badgeRef.current,
         { y: -20, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.35, ease: 'power2.out' },
         1.9
       );
 
-      // Clean up GPU layers
       tl.call(() => {
         gsap.set([split3.chars, split1.chars], { willChange: 'auto' });
       });
@@ -269,10 +264,11 @@ export default function Hero({ heroVideoUrl }: HeroProps) {
   return (
     <div ref={spacerRef} className="relative lg:z-[40] lg:[height:400vh]">
       <section ref={sectionRef} className="min-h-screen lg:sticky lg:top-0 lg:h-screen flex items-center justify-start lg:justify-center overflow-hidden bg-ro-black pt-20">
+
         {/* Blueprint grid */}
         <BlueprintGrid intensity="low" animate={true} />
 
-        {/* Hero video — fires handleVideoReady after 2s of play */}
+        {/* Hero video — waits for ro:site-ready, then fires onReady after 2s */}
         <HeroVideo videoUrl={heroVideoUrl || null} onReady={handleVideoReady} />
 
         {/* Structural lines */}
@@ -292,7 +288,7 @@ export default function Hero({ heroVideoUrl }: HeroProps) {
         <div className="relative z-[10] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-4 lg:pt-8 lg:pb-8">
           <div className="text-center">
 
-            {/* Badge — final sign bolted on top */}
+            {/* Badge */}
             <div ref={badgeRef} className="inline-flex items-center gap-2 px-4 py-1.5 border border-ro-gold/20 bg-ro-gold/5 mb-8">
               <span className="w-2 h-2 bg-ro-gold rounded-full" />
               <span className="text-ro-gold text-xs font-mono tracking-wider uppercase">
@@ -333,7 +329,7 @@ export default function Hero({ heroVideoUrl }: HeroProps) {
               </a>
             </div>
 
-            {/* Trust Stats — foundation */}
+            {/* Trust Stats */}
             <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto">
               {TRUST_STATS.map((stat) => {
                 const { num, suffix } = parseStatValue(stat.value);
