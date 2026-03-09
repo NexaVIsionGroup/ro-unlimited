@@ -86,9 +86,10 @@ export default function DivisionCards() {
         scrub: 2,
         snap: {
           snapTo: 'labels',
-          delay: 0.3,
-          duration: { min: 0.3, max: 0.9 },
+          delay: 0.6,
+          duration: { min: 0.4, max: 1.0 },
           ease: 'power2.inOut',
+          directionalEndThreshold: 0.5,
         },
       },
     });
