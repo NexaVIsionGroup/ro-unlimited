@@ -1,6 +1,6 @@
 export const COMPANY = {
   name: 'RO Unlimited',
-  fullName: 'RO Unlimited Contractor & Developer',
+  fullName: 'RO Unlimited Construction & Development',
   phone: '(864) 304-0139',
   email: 'Rounlimitedco@gmail.com',
   tagline: 'One Company. Total Capability. Ground Up.',
