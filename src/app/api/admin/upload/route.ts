@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sanityWriteClient } from '@/lib/sanity/client';
+import { Readable } from 'stream';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
+
+// Allow large video uploads through Next.js API route
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,15 +18,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    console.log(`Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) type=${type}...`);
+    const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+    console.log(`Upload start: ${file.name} (${sizeMB}MB) type=${type}`);
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    // Stream directly to Sanity — avoids buffering entire file in memory
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const stream = Readable.from(buffer);
+
     const isVideo = file.type.startsWith('video/') || type.includes('Video') || type === 'video';
 
     const asset = await sanityWriteClient.assets.upload(
       isVideo ? 'file' : 'image',
-      buffer,
-      { filename: file.name, contentType: file.type }
+      stream,
+      {
+        filename: file.name,
+        contentType: file.type,
+      }
     );
 
     // Ensure siteSettings doc exists
@@ -31,7 +43,7 @@ export async function POST(req: NextRequest) {
       _type: 'siteSettings',
     });
 
-    // Wire the asset to the correct field in siteSettings
+    // Wire asset to the correct siteSettings field
     const fieldMap: Record<string, string> = {
       heroVideo: 'heroVideo',
       commercialVideo: 'commercialVideo',
@@ -56,8 +68,12 @@ export async function POST(req: NextRequest) {
       mimeType: asset.mimeType,
       size: asset.size,
     });
+
   } catch (error: any) {
     console.error('Upload error:', error);
-    return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || 'Upload failed' },
+      { status: 500 }
+    );
   }
 }
