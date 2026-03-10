@@ -1,30 +1,64 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { Upload, Video, Image, Type, Check, Loader2, Trash2, Eye, RefreshCw, ArrowLeft, Building2 } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Upload, Video, Type, Check, Loader2, Trash2, Eye, RefreshCw, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 interface SiteSettings {
   heroVideoUrl?: string;
-  heroVideoId?: string;
   commercialVideoUrl?: string;
-  commercialVideoId?: string;
 }
 
-type UploadTarget = 'heroVideo' | 'commercialVideo';
-
-interface UploadSectionState {
+interface UploadState {
   uploading: boolean;
   progress: number;
   dragOver: boolean;
 }
 
-const defaultUploadState: UploadSectionState = { uploading: false, progress: 0, dragOver: false };
+type Target = 'heroVideo' | 'commercialVideo';
+
+const fresh = (): UploadState => ({ uploading: false, progress: 0, dragOver: false });
+
+// Upload directly from browser → Sanity CDN (bypasses Vercel 4.5MB body limit entirely)
+async function uploadDirectToSanity(
+  file: File,
+  onProgress: (pct: number) => void
+): Promise<{ assetId: string; url: string }> {
+  const cfgRes = await fetch('/api/admin/upload-config');
+  if (!cfgRes.ok) throw new Error('Could not get upload config');
+  const { projectId, dataset, apiVersion, token } = await cfgRes.json();
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const uploadUrl = `https://api.sanity.io/v${apiVersion}/assets/files/${dataset}?filename=${encodeURIComponent(file.name)}`;
+
+    xhr.upload.addEventListener('progress', e => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 90));
+    });
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const data = JSON.parse(xhr.responseText);
+        resolve({ assetId: data.document._id, url: data.document.url });
+      } else {
+        reject(new Error(`Sanity upload failed (${xhr.status}): ${xhr.responseText.slice(0, 200)}`));
+      }
+    });
+
+    xhr.addEventListener('error', () => reject(new Error('Network error during upload')));
+    xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
+
+    xhr.open('POST', uploadUrl);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+    xhr.send(file);
+  });
+}
 
 export default function SiteEditor() {
   const [settings, setSettings] = useState<SiteSettings>({});
-  const [heroState, setHeroState] = useState<UploadSectionState>({ ...defaultUploadState });
-  const [commState, setCommState] = useState<UploadSectionState>({ ...defaultUploadState });
+  const [heroState, setHeroState] = useState<UploadState>(fresh());
+  const [commState, setCommState] = useState<UploadState>(fresh());
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const heroInputRef = useRef<HTMLInputElement>(null);
@@ -41,52 +75,64 @@ export default function SiteEditor() {
     finally { setLoading(false); }
   };
 
-  const handleUpload = async (file: File, target: UploadTarget) => {
+  const handleUpload = async (file: File, target: Target) => {
     const setState = target === 'heroVideo' ? setHeroState : setCommState;
+
     if (!file.type.startsWith('video/')) {
       setMessage({ type: 'error', text: 'Please upload a video file (MP4, WebM, MOV)' });
       return;
     }
-    if (file.size > 200 * 1024 * 1024) {
-      setMessage({ type: 'error', text: 'Video must be under 200MB' });
-      return;
-    }
+
     setState(s => ({ ...s, uploading: true, progress: 0 }));
     setMessage(null);
+
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', target);
-      const interval = setInterval(() => setState(s => ({ ...s, progress: Math.min(s.progress + 5, 90) })), 400);
-      const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
-      clearInterval(interval);
+      // Direct browser → Sanity upload (no Vercel size limit)
+      const { assetId, url } = await uploadDirectToSanity(file, pct =>
+        setState(s => ({ ...s, progress: pct }))
+      );
+
+      setState(s => ({ ...s, progress: 95 }));
+
+      // Save asset reference to siteSettings via our API
+      const field = target; // 'heroVideo' or 'commercialVideo'
+      await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ field, assetRef: assetId }),
+      });
+
       setState(s => ({ ...s, progress: 100 }));
-      if (res.ok) {
-        const data = await res.json();
-        if (target === 'heroVideo') {
-          setSettings(p => ({ ...p, heroVideoUrl: data.url, heroVideoId: data.assetId }));
-          setMessage({ type: 'success', text: 'Homepage hero video uploaded! Live within 60 seconds.' });
-        } else {
-          setSettings(p => ({ ...p, commercialVideoUrl: data.url, commercialVideoId: data.assetId }));
-          setMessage({ type: 'success', text: 'Commercial page video uploaded! Live within 60 seconds.' });
-        }
+
+      if (target === 'heroVideo') {
+        setSettings(p => ({ ...p, heroVideoUrl: url }));
+        setMessage({ type: 'success', text: 'Homepage hero video uploaded! Live within 60 seconds.' });
       } else {
-        const err = await res.json();
-        setMessage({ type: 'error', text: err.error || 'Upload failed' });
+        setSettings(p => ({ ...p, commercialVideoUrl: url }));
+        setMessage({ type: 'success', text: 'Commercial page video uploaded! Live within 60 seconds.' });
       }
-    } catch { setMessage({ type: 'error', text: 'Upload failed. Please try again.' }); }
-    finally { setState(s => ({ ...s, uploading: false })); setTimeout(() => setState(s => ({ ...s, progress: 0 })), 2000); }
+
+    } catch (e: any) {
+      setMessage({ type: 'error', text: e.message || 'Upload failed. Please try again.' });
+    } finally {
+      setState(s => ({ ...s, uploading: false }));
+      setTimeout(() => setState(s => ({ ...s, progress: 0 })), 2000);
+    }
   };
 
-  const handleDelete = async (target: UploadTarget) => {
+  const handleDelete = async (target: Target) => {
     const label = target === 'heroVideo' ? 'homepage hero video' : 'Commercial page video';
     if (!confirm(`Remove the ${label}?`)) return;
     try {
       const body = target === 'heroVideo' ? { heroVideo: null } : { commercialVideo: null };
-      const res = await fetch('/api/admin/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       if (res.ok) {
-        if (target === 'heroVideo') setSettings(p => ({ ...p, heroVideoUrl: undefined, heroVideoId: undefined }));
-        else setSettings(p => ({ ...p, commercialVideoUrl: undefined, commercialVideoId: undefined }));
+        if (target === 'heroVideo') setSettings(p => ({ ...p, heroVideoUrl: undefined }));
+        else setSettings(p => ({ ...p, commercialVideoUrl: undefined }));
         setMessage({ type: 'success', text: 'Video removed.' });
       }
     } catch { setMessage({ type: 'error', text: 'Failed to remove video.' }); }
@@ -98,79 +144,81 @@ export default function SiteEditor() {
     </div>
   );
 
-  const VideoUploadSection = ({
+  const VideoSection = ({
     target, title, description, previewHref, currentUrl, state,
-    inputRef, accentColor,
+    inputRef, accent,
   }: {
-    target: UploadTarget; title: string; description: string; previewHref: string;
-    currentUrl?: string; state: UploadSectionState;
-    inputRef: React.RefObject<HTMLInputElement>; accentColor: string;
-  }) => (
-    <section className="bg-[#111111] border border-white/5 rounded-lg overflow-hidden">
-      <div className="p-6 border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 flex items-center justify-center rounded" style={{ background: `${accentColor}18` }}>
-            <Video size={16} style={{ color: accentColor }} />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold">{title}</h2>
-            <p className="text-white/40 text-xs">{description}</p>
+    target: Target; title: string; description: string; previewHref: string;
+    currentUrl?: string; state: UploadState;
+    inputRef: React.RefObject<HTMLInputElement>; accent: string;
+  }) => {
+    const setState = target === 'heroVideo' ? setHeroState : setCommState;
+    return (
+      <section className="bg-[#111111] border border-white/5 rounded-lg overflow-hidden">
+        <div className="p-6 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 flex items-center justify-center rounded" style={{ background: `${accent}18` }}>
+              <Video size={16} style={{ color: accent }} />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">{title}</h2>
+              <p className="text-white/40 text-xs">{description}</p>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="p-6">
-        {currentUrl && (
-          <div className="mb-6">
-            <div className="relative aspect-video bg-black rounded-lg overflow-hidden border border-white/5">
-              <video src={currentUrl} className="w-full h-full object-cover" autoPlay loop muted playsInline />
-              <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-green-500/20 text-green-400 px-2 py-1 rounded text-[10px] font-mono uppercase tracking-wider">
-                <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                Live
+        <div className="p-6">
+          {currentUrl && (
+            <div className="mb-6">
+              <div className="relative aspect-video bg-black rounded-lg overflow-hidden border border-white/5">
+                <video src={currentUrl} className="w-full h-full object-cover" autoPlay loop muted playsInline />
+                <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-green-500/20 text-green-400 px-2 py-1 rounded text-[10px] font-mono uppercase tracking-wider">
+                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" /> Live
+                </div>
               </div>
-            </div>
-            <div className="flex items-center justify-between mt-3">
-              <span className="text-white/30 text-xs">Currently active on {previewHref === '/' ? 'homepage' : 'commercial page'}</span>
-              <div className="flex gap-2">
-                <a href={previewHref} target="_blank" className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white/50 hover:text-white border border-white/10 hover:border-white/20 rounded transition-all">
-                  <Eye size={12} /> Preview
-                </a>
-                <button onClick={() => handleDelete(target)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400/60 hover:text-red-400 border border-red-400/10 hover:border-red-400/20 rounded transition-all">
-                  <Trash2 size={12} /> Remove
-                </button>
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-white/30 text-xs">Currently active on site</span>
+                <div className="flex gap-2">
+                  <a href={previewHref} target="_blank" className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white/50 hover:text-white border border-white/10 hover:border-white/20 rounded transition-all">
+                    <Eye size={12} /> Preview
+                  </a>
+                  <button onClick={() => handleDelete(target)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400/60 hover:text-red-400 border border-red-400/10 hover:border-red-400/20 rounded transition-all">
+                    <Trash2 size={12} /> Remove
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-        <div
-          className={`relative border-2 border-dashed rounded-lg p-10 text-center transition-all cursor-pointer ${state.dragOver ? 'border-[#C9A84C] bg-[#C9A84C]/5' : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02]'} ${state.uploading ? 'pointer-events-none opacity-60' : ''}`}
-          onDragOver={e => { e.preventDefault(); target === 'heroVideo' ? setHeroState(s => ({ ...s, dragOver: true })) : setCommState(s => ({ ...s, dragOver: true })); }}
-          onDragLeave={() => target === 'heroVideo' ? setHeroState(s => ({ ...s, dragOver: false })) : setCommState(s => ({ ...s, dragOver: false }))}
-          onDrop={e => { e.preventDefault(); target === 'heroVideo' ? setHeroState(s => ({ ...s, dragOver: false })) : setCommState(s => ({ ...s, dragOver: false })); const f = e.dataTransfer.files[0]; if (f) handleUpload(f, target); }}
-          onClick={() => inputRef.current?.click()}
-        >
-          <input ref={inputRef} type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden"
-            onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f, target); }} />
-          {state.uploading ? (
-            <div>
-              <Loader2 className="mx-auto mb-3 animate-spin text-[#C9A84C]" size={32} />
-              <div className="text-sm text-white/60 mb-3">Uploading to Sanity CDN...</div>
-              <div className="w-48 mx-auto h-1.5 bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-[#C9A84C] rounded-full transition-all duration-300" style={{ width: state.progress + '%' }} />
-              </div>
-              <div className="text-[10px] text-white/30 mt-2">{state.progress}%</div>
-            </div>
-          ) : (
-            <div>
-              <Upload className="mx-auto mb-3 text-white/20" size={32} />
-              <div className="text-sm text-white/60 mb-1">{currentUrl ? 'Replace video' : 'Upload video'}</div>
-              <div className="text-xs text-white/30">Drag & drop or click to browse. MP4, WebM, MOV. Max 200MB.</div>
-              <div className="text-[10px] text-white/20 mt-3">Recommended: 1920×1080 or higher, loops cleanly</div>
             </div>
           )}
+          <div
+            className={`relative border-2 border-dashed rounded-lg p-10 text-center transition-all cursor-pointer ${state.dragOver ? 'border-[#C9A84C] bg-[#C9A84C]/5' : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02]'} ${state.uploading ? 'pointer-events-none opacity-60' : ''}`}
+            onDragOver={e => { e.preventDefault(); setState(s => ({ ...s, dragOver: true })); }}
+            onDragLeave={() => setState(s => ({ ...s, dragOver: false }))}
+            onDrop={e => { e.preventDefault(); setState(s => ({ ...s, dragOver: false })); const f = e.dataTransfer.files[0]; if (f) handleUpload(f, target); }}
+            onClick={() => !state.uploading && inputRef.current?.click()}
+          >
+            <input ref={inputRef} type="file" accept="video/mp4,video/webm,video/quicktime,video/mov" className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f, target); e.target.value = ''; }} />
+            {state.uploading ? (
+              <div>
+                <Loader2 className="mx-auto mb-3 animate-spin text-[#C9A84C]" size={32} />
+                <div className="text-sm text-white/60 mb-3">Uploading directly to CDN...</div>
+                <div className="w-48 mx-auto h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-[#C9A84C] rounded-full transition-all duration-200" style={{ width: state.progress + '%' }} />
+                </div>
+                <div className="text-[10px] text-white/30 mt-2">{state.progress}%</div>
+              </div>
+            ) : (
+              <div>
+                <Upload className="mx-auto mb-3 text-white/20" size={32} />
+                <div className="text-sm text-white/60 mb-1">{currentUrl ? 'Replace video' : 'Upload video'}</div>
+                <div className="text-xs text-white/30">Drag & drop or click to browse · MP4, MOV, WebM · Any size</div>
+                <div className="text-[10px] text-white/20 mt-3">Recommended: 1920×1080 or higher, loops cleanly</div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </section>
-  );
+      </section>
+    );
+  };
 
   return (
     <div>
@@ -196,27 +244,19 @@ export default function SiteEditor() {
         </div>
       )}
 
-      <VideoUploadSection
-        target="heroVideo"
-        title="Homepage Hero Video"
+      <VideoSection
+        target="heroVideo" title="Homepage Hero Video"
         description="Background video for the main homepage hero section"
-        previewHref="/"
-        currentUrl={settings.heroVideoUrl}
-        state={heroState}
-        inputRef={heroInputRef}
-        accentColor="#C9A84C"
+        previewHref="/" currentUrl={settings.heroVideoUrl}
+        state={heroState} inputRef={heroInputRef} accent="#C9A84C"
       />
 
       <div className="mt-6">
-        <VideoUploadSection
-          target="commercialVideo"
-          title="Commercial Division Hero Video"
+        <VideoSection
+          target="commercialVideo" title="Commercial Division Hero Video"
           description="Full-bleed background video for the Commercial page hero"
-          previewHref="/commercial"
-          currentUrl={settings.commercialVideoUrl}
-          state={commState}
-          inputRef={commInputRef}
-          accentColor="#60a5fa"
+          previewHref="/commercial" currentUrl={settings.commercialVideoUrl}
+          state={commState} inputRef={commInputRef} accent="#60a5fa"
         />
       </div>
 
