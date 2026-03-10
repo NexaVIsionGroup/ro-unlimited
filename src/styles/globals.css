@@ -211,3 +211,40 @@ body.admin-mode .loading-sequence-overlay {
 }
 body.admin-mode { overflow: hidden !important; }
 body.admin-mode > div > div > div > main.min-h-screen { min-height: auto !important; }
+
+
+/* ═══════════════════════════════════════
+   JOIN CTA BADGE — footer animated shimmer
+═══════════════════════════════════════ */
+.join-cta-badge {
+  background: #D4772C;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shimmer sweep layer */
+.join-cta-badge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  animation: joinShimmer 2.2s ease-in-out infinite;
+}
+
+/* Hover: lift border to white-ish */
+.join-cta-badge:hover {
+  background: #e8893a;
+  color: #000;
+}
+
+@keyframes joinShimmer {
+  0%   { transform: translateX(-100%); }
+  40%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}

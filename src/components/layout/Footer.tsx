@@ -24,6 +24,7 @@ import { gsap, useGSAP } from '@/components/animations/GSAPProvider';
  *   0.85s  Gold accent headings weld
  *   0.95s  Bottom bar slides up
  *   1.10s  "Get a Quote" bolts in
+ *   1.30s  Join CTA pulses to life
  */
 export default function Footer() {
   const footerRef = useRef<HTMLElement>(null);
@@ -35,6 +36,7 @@ export default function Footer() {
   const col4Ref = useRef<HTMLDivElement>(null);
   const bottomBarRef = useRef<HTMLDivElement>(null);
   const quoteRef = useRef<HTMLAnchorElement>(null);
+  const joinRef = useRef<HTMLAnchorElement>(null);
 
   const scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
@@ -106,7 +108,39 @@ export default function Footer() {
       1.10
     );
 
+    // 1.30s: Join CTA flashes in then loops
+    tl.fromTo(joinRef.current,
+      { opacity: 0, scale: 0.9 },
+      { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' },
+      1.30
+    );
+
+    // After build completes, start looping pulse on the join badge
+    tl.call(() => {
+      if (!joinRef.current) return;
+      // Outer glow pulse
+      gsap.to(joinRef.current, {
+        boxShadow: '0 0 18px 4px rgba(212,119,44,0.7), 0 0 6px 1px rgba(212,119,44,0.9)',
+        repeat: -1,
+        yoyo: true,
+        duration: 1.1,
+        ease: 'sine.inOut',
+      });
+      // Subtle scale breathe
+      gsap.to(joinRef.current, {
+        scale: 1.04,
+        repeat: -1,
+        yoyo: true,
+        duration: 1.1,
+        ease: 'sine.inOut',
+      });
+      // Shimmer sweep: animate background-position on the ::before pseudo — 
+      // we do it via a data attribute + CSS animation class instead
+      joinRef.current.classList.add('join-cta-shimmer');
+    }, [], 1.75);
+
   }, { scope: footerRef });
+
 
   return (
     <footer ref={footerRef} className="relative bg-ro-black border-t border-ro-gold/10">
@@ -162,7 +196,21 @@ export default function Footer() {
           <div ref={col4Ref}>
             <h3 className="footer-gold-heading text-ro-gold font-heading text-sm tracking-[0.2em] uppercase mb-6">Start Your Project</h3>
             <p className="text-ro-gray-500 text-sm mb-6">{COMPANY.cta}</p>
-            <p className="text-ro-gray-600 text-xs mb-4">Trade professional? <a href="/join" className="text-ro-gold/50 hover:text-ro-gold transition-colors">Join the RO Network &rarr;</a></p>
+
+            {/* Join CTA — bright animated badge */}
+            <div className="mb-5">
+              <p className="text-ro-gray-600 text-xs mb-2">Trade professional?</p>
+              <a
+                ref={joinRef}
+                href="/join"
+                className="join-cta-badge inline-flex items-center gap-2 px-3 py-1.5 text-xs font-heading tracking-wider uppercase text-ro-black bg-[#D4772C] border border-[#D4772C] overflow-hidden relative"
+                style={{ opacity: 0 }}
+              >
+                <span className="relative z-10">Join the RO Network</span>
+                <span className="relative z-10 text-ro-black/70">→</span>
+              </a>
+            </div>
+
             <Link
               href="/contact"
               ref={quoteRef}
