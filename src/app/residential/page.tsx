@@ -83,7 +83,7 @@ export default function ResidentialPage() {
 
   // ═══ GSAP — softer, warmer animations than commercial ═══
   useEffect(() => {
-    if (!mounted || !containerRef.current || reducedMotion) return;
+    if (!mounted || !containerRef.current) return;
     const ctx = gsap.context(() => {
 
       // Hero — gentle float-in

@@ -92,7 +92,7 @@ export default function CommercialPage() {
 
   // ═══ GSAP MASTER TIMELINE ═══
   useEffect(() => {
-    if (!mounted || !containerRef.current || reducedMotion) return;
+    if (!mounted || !containerRef.current) return;
     const ctx = gsap.context(() => {
 
       // ── HERO entrance ──
