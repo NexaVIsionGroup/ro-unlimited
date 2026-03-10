@@ -18,44 +18,57 @@ interface UploadState {
 type Target = 'heroVideo' | 'commercialVideo';
 const fresh = (): UploadState => ({ uploading: false, progress: 0, dragOver: false });
 
-// Send raw binary to our own API route — no CORS issues, no multipart overhead
-// The API route has bodyParser disabled so it streams straight to Sanity
+// Upload directly from browser → Sanity CDN using project subdomain (CORS allowed)
+// Then save the asset reference via our API (tiny JSON, no size limit issue)
 async function uploadVideo(
   file: File,
-  type: Target,
+  target: Target,
   onProgress: (pct: number) => void
 ): Promise<{ assetId: string; url: string }> {
-  return new Promise((resolve, reject) => {
+  // Get write token from our API (never hardcoded client-side in source)
+  const cfgRes = await fetch('/api/admin/upload-config');
+  if (!cfgRes.ok) throw new Error('Could not get upload config');
+  const { token, dataset, apiVersion } = await cfgRes.json();
+
+  // Upload direct to Sanity using PROJECT SUBDOMAIN — this is what allows CORS
+  // api.sanity.io (without subdomain) does NOT return ACAO header
+  const uploadUrl = `https://3at2yyx0.api.sanity.io/v${apiVersion}/assets/files/${dataset}?filename=${encodeURIComponent(file.name)}`;
+
+  const assetData = await new Promise<{ _id: string; url: string }>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    const url = `/api/admin/upload?type=${type}&filename=${encodeURIComponent(file.name)}`;
-
     xhr.upload.addEventListener('progress', e => {
-      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 95));
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 90));
     });
-
     xhr.addEventListener('load', () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           const data = JSON.parse(xhr.responseText);
-          if (data.error) reject(new Error(data.error));
-          else resolve({ assetId: data.assetId, url: data.url });
-        } catch {
-          reject(new Error('Invalid response from server'));
-        }
+          resolve({ _id: data.document._id, url: data.document.url });
+        } catch { reject(new Error('Invalid response from Sanity')); }
       } else {
         let msg = `Upload failed (${xhr.status})`;
-        try { msg = JSON.parse(xhr.responseText).error || msg; } catch {}
+        try { msg = JSON.parse(xhr.responseText)?.error?.description || msg; } catch {}
         reject(new Error(msg));
       }
     });
-
-    xhr.addEventListener('error', () => reject(new Error('Network error — check your connection')));
-    xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
-
-    xhr.open('POST', url);
+    xhr.addEventListener('error', () => reject(new Error('Network error — check your connection and try again')));
+    xhr.open('POST', uploadUrl);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
     xhr.send(file);
   });
+
+  onProgress(95);
+
+  // Save asset ref to siteSettings via our API (small JSON call, no size limit)
+  await fetch('/api/admin/settings', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ field: target, assetRef: assetData._id }),
+  });
+
+  onProgress(100);
+  return { assetId: assetData._id, url: assetData.url };
 }
 
 export default function SiteEditor() {
@@ -80,21 +93,14 @@ export default function SiteEditor() {
 
   const handleUpload = async (file: File, target: Target) => {
     const setState = target === 'heroVideo' ? setHeroState : setCommState;
-
     if (!file.type.startsWith('video/')) {
       setMessage({ type: 'error', text: 'Please upload a video file (MP4, WebM, MOV)' });
       return;
     }
-
     setState(s => ({ ...s, uploading: true, progress: 0 }));
     setMessage(null);
-
     try {
-      const { url } = await uploadVideo(file, target, pct =>
-        setState(s => ({ ...s, progress: pct }))
-      );
-      setState(s => ({ ...s, progress: 100 }));
-
+      const { url } = await uploadVideo(file, target, pct => setState(s => ({ ...s, progress: pct })));
       if (target === 'heroVideo') {
         setSettings(p => ({ ...p, heroVideoUrl: url }));
         setMessage({ type: 'success', text: 'Homepage hero video uploaded! Live within 60 seconds.' });
@@ -199,7 +205,7 @@ export default function SiteEditor() {
               <div>
                 <Upload className="mx-auto mb-3 text-white/20" size={32} />
                 <div className="text-sm text-white/60 mb-1">{currentUrl ? 'Replace video' : 'Upload video'}</div>
-                <div className="text-xs text-white/30">Drag & drop or click · MP4, MOV, WebM</div>
+                <div className="text-xs text-white/30">Drag & drop or click · MP4, MOV, WebM · Any size</div>
                 <div className="text-[10px] text-white/20 mt-3">Recommended: 1920×1080 or higher</div>
               </div>
             )}
@@ -233,20 +239,16 @@ export default function SiteEditor() {
         </div>
       )}
 
-      <VideoSection
-        target="heroVideo" title="Homepage Hero Video"
+      <VideoSection target="heroVideo" title="Homepage Hero Video"
         description="Background video for the main homepage hero section"
         previewHref="/" currentUrl={settings.heroVideoUrl}
-        state={heroState} inputRef={heroInputRef} accent="#C9A84C"
-      />
+        state={heroState} inputRef={heroInputRef} accent="#C9A84C" />
 
       <div className="mt-6">
-        <VideoSection
-          target="commercialVideo" title="Commercial Division Hero Video"
+        <VideoSection target="commercialVideo" title="Commercial Division Hero Video"
           description="Full-bleed background video for the Commercial page hero"
           previewHref="/commercial" currentUrl={settings.commercialVideoUrl}
-          state={commState} inputRef={commInputRef} accent="#60a5fa"
-        />
+          state={commState} inputRef={commInputRef} accent="#60a5fa" />
       </div>
 
       <section className="mt-6 bg-[#111111] border border-white/5 rounded-lg p-6 opacity-40">
