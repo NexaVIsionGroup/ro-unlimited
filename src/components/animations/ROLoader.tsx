@@ -33,13 +33,19 @@ export default function ROLoader({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Reduced motion: skip splash, fire ready immediately
-    if (reducedMotion) {
+    // Only show splash on the FIRST visit this session.
+    // Back button, internal navigation, and page switches skip it.
+    const alreadyPlayed = (window as any).__roSplashPlayed || false;
+    if (alreadyPlayed || reducedMotion) {
       setDone(true);
+      (window as any).__roSplashPlayed = true;
       (window as any).__roSiteReady = true;
       window.dispatchEvent(new Event('ro:site-ready'));
       return;
     }
+
+    // Mark splash as played for the rest of this page session
+    (window as any).__roSplashPlayed = true;
 
     const ctx = gsap.context(() => {
       gsap.set(roRef.current, { opacity: 0, scale: 0.88 });
