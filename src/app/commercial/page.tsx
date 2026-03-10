@@ -502,9 +502,10 @@ export default function CommercialPage() {
           {/* Reinforcement statement */}
           <div className="mt-16 text-center">
             <div className="w-16 h-[1px] bg-gradient-to-r from-transparent via-ro-gold/40 to-transparent mx-auto mb-6" />
-            <p className="text-ro-gray-300 text-sm sm:text-base italic leading-relaxed max-w-xl mx-auto">
+            <p className="text-ro-gray-300 text-sm sm:text-base italic leading-relaxed max-w-xl mx-auto mb-4">
               &ldquo;When you hire RO, you&apos;re not just getting one company — you&apos;re getting an entire team of specialists held to the same standard we hold ourselves.&rdquo;
             </p>
+            <p className="text-ro-gray-600 text-xs">Are you one of these professionals? <a href="/join" className="text-ro-gold/50 hover:text-ro-gold transition-colors">Join the RO Network &rarr;</a></p>
           </div>
         </div>
       </section>

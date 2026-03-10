@@ -162,6 +162,7 @@ export default function Footer() {
           <div ref={col4Ref}>
             <h3 className="footer-gold-heading text-ro-gold font-heading text-sm tracking-[0.2em] uppercase mb-6">Start Your Project</h3>
             <p className="text-ro-gray-500 text-sm mb-6">{COMPANY.cta}</p>
+            <p className="text-ro-gray-600 text-xs mb-4">Trade professional? <a href="/join" className="text-ro-gold/50 hover:text-ro-gold transition-colors">Join the RO Network &rarr;</a></p>
             <Link
               href="/contact"
               ref={quoteRef}
