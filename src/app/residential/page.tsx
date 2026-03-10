@@ -230,7 +230,7 @@ export default function ResidentialPage() {
               <Home size={14} className="text-ro-gold" />
               <span className="text-ro-gold text-xs font-mono tracking-[0.25em] uppercase">Residential Division</span>
             </div>
-            <h1 className="text-ro-white font-heading text-5xl sm:text-6xl md:text-7xl lg:text-[9rem] xl:text-[10rem] tracking-tight uppercase leading-[0.82] mb-8">
+            <h1 className="text-ro-white font-heading text-5xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl tracking-tight uppercase leading-[0.85] mb-8">
               Your Home.<br />
               <span className="gradient-text-gold">Your Vision.</span><br />
               <span className="text-ro-white/90">Built by Hands</span><br />

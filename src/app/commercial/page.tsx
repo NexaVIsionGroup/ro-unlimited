@@ -246,7 +246,7 @@ export default function CommercialPage() {
               <Building2 size={14} className="text-ro-gold" />
               <span className="text-ro-gold text-xs font-mono tracking-[0.25em] uppercase">Commercial Division</span>
             </div>
-            <h1 className="text-ro-white font-heading text-5xl sm:text-6xl md:text-7xl lg:text-[9rem] xl:text-[11rem] tracking-tight uppercase leading-[0.82] mb-8">
+            <h1 className="text-ro-white font-heading text-5xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl tracking-tight uppercase leading-[0.85] mb-8">
               Commercial<br /><span className="gradient-text-gold">Grade.</span><br />
               <span className="text-ro-white/90">Unlimited</span><br /><span className="gradient-text-gold">Scale.</span>
             </h1>
