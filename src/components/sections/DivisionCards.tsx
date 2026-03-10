@@ -18,16 +18,8 @@ const ICONS: Record<string, any> = {
 /**
  * DivisionCards — Scroll-triggered accordion with digital physics.
  *
- * Physics effects:
- *   1. Weighted snap gate — must scroll 50% into next card before it commits
- *   2. Squish compression — card below deforms slightly as pressure builds
- *   3. Pressure glow — gold border intensifies as scroll approaches threshold
- *   4. Elastic spring-back — overshoots slightly when snapping back (real spring feel)
- *
- * Watermark reveal:
- *   As the final card collapses, the RO icon watermark + slogan fade in
- *   progressively in the dead space below the cards. Opacity ramps from
- *   ~5% (card open) to 100% (fully collapsed), filling the void with brand.
+ * Desktop layout: 2-column grid on lg+, max-w-5xl stage.
+ * Mobile layout: single column accordion (unchanged).
  */
 export default function DivisionCards() {
   const sectionRef  = useRef<HTMLDivElement>(null);
@@ -87,12 +79,10 @@ export default function DivisionCards() {
     const totalCards  = allCards.length;
     const collapseUnit = 1 / totalCards;
 
-    // Set watermark to near-invisible on init
     if (watermarkRef.current) {
       gsap.set(watermarkRef.current, { opacity: 0.05, y: 18 });
     }
 
-    // ── PHYSICS: Pressure glow + squish + watermark reveal via onUpdate ──
     ScrollTrigger.create({
       trigger: spacerRef.current,
       start: 'top top',
@@ -107,7 +97,6 @@ export default function DivisionCards() {
             (progress - windowStart) / collapseUnit
           ));
 
-          // ── Pressure glow ──
           const glowIntensity = localProgress < 0.5
             ? localProgress * 2
             : (1 - localProgress) * 2;
@@ -123,7 +112,6 @@ export default function DivisionCards() {
               : '';
           }
 
-          // ── Squish compression on next card ──
           const nextCard = allCards[i + 1];
           if (nextCard) {
             const squishAmount = localProgress < 0.4
@@ -134,29 +122,19 @@ export default function DivisionCards() {
           }
         });
 
-        // ── Watermark reveal ──
-        // Tied to the LAST card's collapse window.
-        // Starts barely visible (0.05) when the last card begins collapsing,
-        // ramps to full opacity (1.0) as it finishes.
-        // Also lifts slightly upward (parallax feel) as it reveals.
         if (watermarkRef.current) {
           const lastWindow  = (totalCards - 1) * collapseUnit;
           const lastProgress = Math.max(0, Math.min(1,
             (progress - lastWindow) / collapseUnit
           ));
-          // Opacity: 0.05 at start, exponential-ish ramp so it stays
-          // subtle until ~40% then blooms quickly — feels like light
-          // bleeding in rather than a linear fade.
           const opacity = 0.05 + (Math.pow(lastProgress, 1.6) * 0.95);
-          const yOffset = 18 - (lastProgress * 18); // lifts 18px as it reveals
-
+          const yOffset = 18 - (lastProgress * 18);
           watermarkRef.current.style.opacity = String(opacity);
           watermarkRef.current.style.transform = `translateY(${yOffset}px)`;
         }
       },
     });
 
-    // ── Main collapse timeline ─────────────────────────────────────────
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: spacerRef.current,
@@ -194,7 +172,6 @@ export default function DivisionCards() {
         ease: 'power2.inOut',
       }, '<');
 
-      // Reset squish on next card after collapse commits
       const nextCard = allCards[i + 1];
       if (nextCard) {
         tl.to(nextCard, {
@@ -232,104 +209,96 @@ export default function DivisionCards() {
             />
           </div>
 
-          {/* Card Stage */}
-          <div ref={stageRef} className="relative flex-1 max-w-2xl mx-auto w-full flex flex-col">
-            {DIVISIONS.map((division, index) => {
-              const Icon = ICONS[division.icon] || Building2;
-              return (
-                <div
-                  key={division.id}
-                  ref={el => { cardRefs.current[index] = el; }}
-                  className="division-card mb-6 lg:mb-8"
-                >
-                  <Link
-                    href={division.href}
-                    className="relative w-full bg-ro-gray-900/80 lg:bg-ro-gray-900/60 lg:backdrop-blur-sm overflow-hidden block border border-ro-gold/20 transition-none"
-                    style={{ willChange: 'box-shadow, border-color' }}
+          {/* Card Stage — single col on mobile, 2-col grid on desktop */}
+          <div ref={stageRef} className="relative flex-1 max-w-2xl lg:max-w-5xl mx-auto w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 lg:pt-2">
+              {DIVISIONS.map((division, index) => {
+                const Icon = ICONS[division.icon] || Building2;
+                return (
+                  <div
+                    key={division.id}
+                    ref={el => { cardRefs.current[index] = el; }}
+                    className="division-card mb-6 lg:mb-0"
                   >
-                    {/* Corner Bolts — desktop only */}
-                    <div className="card-bolt absolute top-2 left-2 w-2 h-2 rounded-full hidden lg:block"
-                      style={{ background: 'radial-gradient(circle, #D4B965 0%, #C9A84C 60%, #8A7233 100%)', boxShadow: '0 0 4px rgba(201,168,76,0.3)' }}
-                    />
-                    <div className="card-bolt absolute top-2 right-2 w-2 h-2 rounded-full hidden lg:block"
-                      style={{ background: 'radial-gradient(circle, #D4B965 0%, #C9A84C 60%, #8A7233 100%)', boxShadow: '0 0 4px rgba(201,168,76,0.3)' }}
-                    />
-                    <div className="card-bolt absolute bottom-2 left-2 w-2 h-2 rounded-full hidden lg:block"
-                      style={{ background: 'radial-gradient(circle, #D4B965 0%, #C9A84C 60%, #8A7233 100%)', boxShadow: '0 0 4px rgba(201,168,76,0.3)' }}
-                    />
-                    <div className="card-bolt absolute bottom-2 right-2 w-2 h-2 rounded-full hidden lg:block"
-                      style={{ background: 'radial-gradient(circle, #D4B965 0%, #C9A84C 60%, #8A7233 100%)', boxShadow: '0 0 4px rgba(201,168,76,0.3)' }}
-                    />
+                    <Link
+                      href={division.href}
+                      className="relative w-full bg-ro-gray-900/80 lg:bg-ro-gray-900/60 lg:backdrop-blur-sm overflow-hidden block border border-ro-gold/20 transition-none"
+                      style={{ willChange: 'box-shadow, border-color' }}
+                    >
+                      {/* Corner Bolts — desktop only */}
+                      <div className="card-bolt absolute top-2 left-2 w-2 h-2 rounded-full hidden lg:block"
+                        style={{ background: 'radial-gradient(circle, #D4B965 0%, #C9A84C 60%, #8A7233 100%)', boxShadow: '0 0 4px rgba(201,168,76,0.3)' }}
+                      />
+                      <div className="card-bolt absolute top-2 right-2 w-2 h-2 rounded-full hidden lg:block"
+                        style={{ background: 'radial-gradient(circle, #D4B965 0%, #C9A84C 60%, #8A7233 100%)', boxShadow: '0 0 4px rgba(201,168,76,0.3)' }}
+                      />
+                      <div className="card-bolt absolute bottom-2 left-2 w-2 h-2 rounded-full hidden lg:block"
+                        style={{ background: 'radial-gradient(circle, #D4B965 0%, #C9A84C 60%, #8A7233 100%)', boxShadow: '0 0 4px rgba(201,168,76,0.3)' }}
+                      />
+                      <div className="card-bolt absolute bottom-2 right-2 w-2 h-2 rounded-full hidden lg:block"
+                        style={{ background: 'radial-gradient(circle, #D4B965 0%, #C9A84C 60%, #8A7233 100%)', boxShadow: '0 0 4px rgba(201,168,76,0.3)' }}
+                      />
 
-                    {/* Card Content */}
-                    <div className="p-4 sm:p-5 lg:p-6">
-                      {/* Card Header — always visible */}
-                      <div className="card-header flex items-center gap-3 sm:gap-4">
-                        <div className="division-icon w-8 h-8 sm:w-10 sm:h-10 border border-ro-gold/30 flex items-center justify-center text-ro-gold flex-shrink-0">
-                          <Icon size={18} className="sm:w-[22px] sm:h-[22px]" />
+                      {/* Card Content */}
+                      <div className="p-4 sm:p-5 lg:p-6">
+                        {/* Card Header — always visible */}
+                        <div className="card-header flex items-center gap-3 sm:gap-4">
+                          <div className="division-icon w-8 h-8 sm:w-10 sm:h-10 border border-ro-gold/30 flex items-center justify-center text-ro-gold flex-shrink-0">
+                            <Icon size={18} className="sm:w-[22px] sm:h-[22px]" />
+                          </div>
+                          <h3 className="division-name text-ro-white font-heading text-lg sm:text-xl lg:text-2xl tracking-wider uppercase">
+                            {division.name}
+                          </h3>
                         </div>
-                        <h3 className="division-name text-ro-white font-heading text-lg sm:text-xl lg:text-2xl tracking-wider uppercase">
-                          {division.name}
-                        </h3>
+
+                        {/* Card Body — collapses on scroll */}
+                        <div className="card-body overflow-hidden">
+                          <div className="card-body-inner pt-3 sm:pt-4 pb-2">
+                            <p className="division-audience text-ro-gold/50 text-xs tracking-wider uppercase mb-2 sm:mb-3">
+                              {division.targetAudience}
+                            </p>
+                            <p className="division-desc text-ro-gray-400 text-sm sm:text-base leading-relaxed mb-3 sm:mb-4">
+                              {division.description}
+                            </p>
+                            <div className="division-tags flex flex-wrap gap-2 mb-3 sm:mb-4">
+                              {division.services.slice(0, 3).map(service => (
+                                <span
+                                  key={service}
+                                  className="division-tag px-2 sm:px-3 py-1 text-xs font-mono text-ro-gray-500 border border-ro-gray-800"
+                                >
+                                  {service}
+                                </span>
+                              ))}
+                            </div>
+                            <div className="division-arrow flex items-center gap-2 text-ro-gold text-sm tracking-wider uppercase font-heading">
+                              <span>Explore Division</span>
+                              <ArrowRight size={14} />
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Card Body — collapses on scroll */}
-                      <div className="card-body overflow-hidden">
-                        <div className="card-body-inner pt-3 sm:pt-4 pb-2">
-                          <p className="division-audience text-ro-gold/50 text-xs tracking-wider uppercase mb-2 sm:mb-3">
-                            {division.targetAudience}
-                          </p>
-                          <p className="division-desc text-ro-gray-400 text-sm sm:text-base leading-relaxed mb-3 sm:mb-4">
-                            {division.description}
-                          </p>
-                          <div className="division-tags flex flex-wrap gap-2 mb-3 sm:mb-4">
-                            {division.services.slice(0, 3).map(service => (
-                              <span
-                                key={service}
-                                className="division-tag px-2 sm:px-3 py-1 text-xs font-mono text-ro-gray-500 border border-ro-gray-800"
-                              >
-                                {service}
-                              </span>
-                            ))}
-                          </div>
-                          <div className="division-arrow flex items-center gap-2 text-ro-gold text-sm tracking-wider uppercase font-heading">
-                            <span>Explore Division</span>
-                            <ArrowRight size={14} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                      {/* Bottom Gold Weld Line */}
+                      <div className="division-bottom-line absolute bottom-0 left-0 right-0 h-[2px] bg-ro-gold"
+                        style={{ transformOrigin: 'left center', boxShadow: '0 0 6px rgba(201,168,76,0.4)' }}
+                      />
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
 
-                    {/* Bottom Gold Weld Line */}
-                    <div className="division-bottom-line absolute bottom-0 left-0 right-0 h-[2px] bg-ro-gold"
-                      style={{ transformOrigin: 'left center', boxShadow: '0 0 6px rgba(201,168,76,0.4)' }}
-                    />
-                  </Link>
-                </div>
-              );
-            })}
-
-            {/* ── RO Watermark Reveal ─────────────────────────────────────────
-                Lives in the dead space below the collapsed cards.
-                Invisible while any card is open, blooms in as the last
-                card collapses. Opacity driven by scroll progress in onUpdate.
-                The stretched portrait aspect ratio (narrow + tall) gives it
-                weight and presence without competing with the cards above.
-            ──────────────────────────────────────────────────────────────── */}
+            {/* RO Watermark Reveal */}
             <div
               ref={watermarkRef}
               className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none select-none"
               style={{
-                top: 'calc(100% - 20px)',  // sits just below the last card
+                top: 'calc(100% - 20px)',
                 opacity: 0.05,
                 willChange: 'opacity, transform',
               }}
             >
-              {/* RO Icon — stretched tall, pure gold tint via mix-blend */}
-              <div
-                className="relative"
-                style={{ width: '120px', height: '200px' }}
-              >
+              <div className="relative" style={{ width: '120px', height: '200px' }}>
                 <img
                   src="/ro-icon.svg"
                   alt=""
@@ -337,28 +306,20 @@ export default function DivisionCards() {
                   style={{
                     objectFit: 'contain',
                     filter: 'brightness(0) saturate(100%) invert(72%) sepia(33%) saturate(600%) hue-rotate(5deg) brightness(95%)',
-                    // ↑ renders the SVG as solid gold (#C9A84C equivalent)
                   }}
                 />
               </div>
-
-              {/* Slogan — tight tracking, all caps, confident */}
               <div className="mt-3 text-center">
-                <p
-                  className="font-mono uppercase tracking-[0.35em] text-[10px] sm:text-[11px]"
-                  style={{ color: 'rgba(201,168,76,0.7)' }}
-                >
+                <p className="font-mono uppercase tracking-[0.35em] text-[10px] sm:text-[11px]"
+                  style={{ color: 'rgba(201,168,76,0.7)' }}>
                   Ground Up.
                 </p>
-                <p
-                  className="font-mono uppercase tracking-[0.35em] text-[10px] sm:text-[11px] mt-0.5"
-                  style={{ color: 'rgba(255,255,255,0.35)' }}
-                >
+                <p className="font-mono uppercase tracking-[0.35em] text-[10px] sm:text-[11px] mt-0.5"
+                  style={{ color: 'rgba(255,255,255,0.35)' }}>
                   No Shortcuts.
                 </p>
               </div>
             </div>
-
           </div>
 
           {/* Bottom spacer */}

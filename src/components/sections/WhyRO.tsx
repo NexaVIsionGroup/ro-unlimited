@@ -324,7 +324,7 @@ export default function WhyRO() {
 
         {/* Cards grid — 2×2 on mobile, 4-col on desktop */}
         <div className="flex-1 flex items-center py-4 lg:py-0">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 w-full max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 w-full max-w-6xl mx-auto">
             {REASONS.map((reason, index) => (
               <div
                 key={reason.title}
