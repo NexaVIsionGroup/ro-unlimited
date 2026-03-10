@@ -1,13 +1,39 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_LINKS, COMPANY } from '@/lib/constants';
 import { Menu, X, Phone } from 'lucide-react';
+import { gsap } from '@/components/animations/GSAPProvider';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const joinNavRef = useRef<HTMLAnchorElement>(null);
+  const glowTweens = useRef<gsap.core.Tween[]>([]);
+
+  // Start pulse when menu opens, kill when it closes
+  useEffect(() => {
+    if (isOpen && joinNavRef.current) {
+      gsap.set(joinNavRef.current, { transformOrigin: 'left center' });
+      const t1 = gsap.to(joinNavRef.current, {
+        boxShadow: '0 0 12px 2px rgba(212,119,44,0.55), 0 0 4px 1px rgba(212,119,44,0.35)',
+        repeat: -1, yoyo: true, duration: 1.1, ease: 'sine.inOut',
+      });
+      const t2 = gsap.to(joinNavRef.current, {
+        scale: 1.04,
+        repeat: -1, yoyo: true, duration: 1.1, ease: 'sine.inOut',
+      });
+      glowTweens.current = [t1, t2];
+    } else {
+      glowTweens.current.forEach(t => t.kill());
+      glowTweens.current = [];
+      if (joinNavRef.current) {
+        gsap.set(joinNavRef.current, { clearProps: 'boxShadow,scale' });
+      }
+    }
+  }, [isOpen]);
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-ro-black/95 backdrop-blur-sm border-b border-ro-gold/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,11 +91,22 @@ export default function Navbar() {
               </Link>
             );
           })}
-          {/* Join the RO Network — standout link */}
-          <Link href="/join" onClick={() => setIsOpen(false)}
-            className="block mx-4 mt-4 px-4 py-3 text-center text-sm tracking-wider uppercase font-heading border border-ro-gold/30 bg-ro-gold/5 text-ro-gold hover:bg-ro-gold/10 transition-all duration-300">
-            Join the RO Network
-          </Link>
+
+          {/* Join the RO Network — ghost badge, matches footer style */}
+          <div className="px-4 pt-3">
+            <p className="text-ro-gray-600 text-[10px] mb-1.5 uppercase tracking-wider">Trade professional?</p>
+            <a
+              ref={joinNavRef}
+              href="/join"
+              onClick={() => setIsOpen(false)}
+              className="join-cta-badge inline-flex items-center gap-1.5 px-2 py-[3px] text-[10px] font-heading tracking-wider uppercase"
+              style={{ transformOrigin: 'left center' }}
+            >
+              <span className="relative z-10">Join the RO Network</span>
+              <span className="relative z-10 opacity-70">→</span>
+            </a>
+          </div>
+
           <div className="pt-4 border-t border-ro-gray-800 mt-4">
             <a href={`tel:${COMPANY.phone.replace(/[^0-9]/g, '')}`} className="flex items-center gap-2 text-ro-gold px-4 py-2">
               <Phone size={16} /><span className="font-mono">{COMPANY.phone}</span>
