@@ -5,7 +5,7 @@ import AdminHeader from '@/components/admin/AdminHeader';
 import { gsap } from 'gsap';
 import {
   FileText, MapPin, ChevronDown, ChevronUp,
-  Check, Loader2, Plus, Trash2, X, Award,
+  Check, Loader2, Plus, Trash2, X, Award, HelpCircle,
 } from 'lucide-react';
 
 interface License {
@@ -57,10 +57,90 @@ function SaveButton({ saving, saved, error, onClick }: { saving: boolean; saved:
   );
 }
 
+// ── License Info Popup ────────────────────────────────────────────────────────
+function LicenseInfoPopup({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md bg-[#141414] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+          <div className="flex items-center gap-2">
+            <Award size={16} className="text-blue-400" />
+            <span className="text-sm font-semibold text-white">What to Enter Here</span>
+          </div>
+          <button onClick={onClose} className="text-white/30 hover:text-white transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-5 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
+
+          <p className="text-xs text-white/50 leading-relaxed">
+            This section is for your credentials — the paperwork that proves you are licensed, insured, and legit. Commercial clients and developers check this before signing anything. Here is what to pull together:
+          </p>
+
+          {/* SC GC License */}
+          <div className="bg-blue-500/8 border border-blue-500/15 rounded-xl p-4">
+            <p className="text-xs font-semibold text-blue-300 mb-1.5">🏛️ SC General Contractor License</p>
+            <p className="text-xs text-white/50 leading-relaxed">
+              This is your main license for commercial work in South Carolina — required by SC LLR for any commercial job over $10,000. It will be on the card or certificate SC sent you. Enter the license number exactly as it appears (example: <span className="font-mono text-white/70">GC-123456</span>) and the issuing authority is <span className="text-white/70">SC LLR / Contractor's Licensing Board</span>.
+            </p>
+          </div>
+
+          {/* Residential Builder */}
+          <div className="bg-[#C9A84C]/8 border border-[#C9A84C]/15 rounded-xl p-4">
+            <p className="text-xs font-semibold text-[#C9A84C] mb-1.5">🏠 SC Residential Builder License</p>
+            <p className="text-xs text-white/50 leading-relaxed">
+              If you do residential work — custom homes, additions, renovations — you need this separate license from the SC Residential Builders Commission. Same deal: grab the number off your card. Issuing authority is <span className="text-white/70">SC Residential Builders Commission</span>.
+            </p>
+          </div>
+
+          {/* Insurance */}
+          <div className="bg-green-500/8 border border-green-500/15 rounded-xl p-4">
+            <p className="text-xs font-semibold text-green-300 mb-1.5">🛡️ General Liability Insurance</p>
+            <p className="text-xs text-white/50 leading-relaxed">
+              Toggle this on and enter your coverage amount. Most commercial clients require at least $1,000,000 per occurrence. You can find this on your insurance certificate (the COI your agent sends you). This is one of the first things a developer will ask for.
+            </p>
+          </div>
+
+          {/* Workers Comp note */}
+          <div className="bg-white/3 border border-white/8 rounded-xl p-4">
+            <p className="text-xs font-semibold text-white/60 mb-1.5">📋 Other Things Worth Adding</p>
+            <ul className="text-xs text-white/40 space-y-1.5 leading-relaxed">
+              <li><span className="text-white/60">Workers' Comp</span> — Required in SC if you have employees. Add it as a separate entry if you have it.</li>
+              <li><span className="text-white/60">Surety Bond</span> — SC requires a bond to get your GC license. Worth listing the bond amount.</li>
+              <li><span className="text-white/60">OSHA 10 or 30-Hour</span> — A lot of commercial sites require this card on the crew. If you or your guys have it, add it.</li>
+              <li><span className="text-white/60">Specialty Licenses</span> — Asphalt paving, land grading, structural framing — SC has specific sub-classifications. Add any that apply.</li>
+            </ul>
+          </div>
+
+          {/* Tip */}
+          <div className="flex items-start gap-2.5 px-1">
+            <span className="text-lg leading-none mt-0.5">💡</span>
+            <p className="text-[11px] text-white/30 leading-relaxed">
+              Not sure if a license is expired? You can look up any SC contractor license at <span className="text-white/50">llr.sc.gov</span> using your name or license number. It is public record.
+            </p>
+          </div>
+        </div>
+
+        <div className="px-5 py-3 border-t border-white/5">
+          <button onClick={onClose}
+            className="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 text-xs font-medium rounded-lg transition-colors">
+            Got It
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CompanyPage() {
   const pageRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [openSection, setOpenSection] = useState<string | null>('story');
+  const [showLicenseInfo, setShowLicenseInfo] = useState(false);
 
   const [story, setStory] = useState('');
   const [founderName, setFounderName] = useState('');
@@ -199,7 +279,20 @@ export default function CompanyPage() {
 
         {/* Licenses */}
         <div className="section-card bg-[#111] border border-white/5 rounded-xl overflow-hidden">
-          <SectionHeader id="licenses" icon={Award} title="Licenses & Credentials" subtitle="Contractor license, insurance, bonds — shows you are legit" color="#60a5fa" />
+          {/* Custom header with info button */}
+          <div className="flex items-center justify-between pr-4">
+            <div className="flex-1">
+              <SectionHeader id="licenses" icon={Award} title="Licenses & Credentials" subtitle="Contractor license, insurance, bonds — shows you are legit" color="#60a5fa" />
+            </div>
+            <button
+              onClick={e => { e.stopPropagation(); setShowLicenseInfo(true); }}
+              className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] text-blue-400/70 hover:text-blue-300 bg-blue-500/8 hover:bg-blue-500/15 border border-blue-500/15 rounded-lg transition-all"
+            >
+              <HelpCircle size={12} />
+              What to enter
+            </button>
+          </div>
+
           {openSection === 'licenses' && (
             <div className="border-t border-white/5 px-6 py-6 space-y-5">
               <div className="flex items-center justify-between p-4 bg-black/30 rounded-xl border border-white/5">
@@ -236,13 +329,13 @@ export default function CompanyPage() {
                         <div>
                           <label className="block text-[10px] text-white/30 mb-1">Type</label>
                           <input value={lic.type} onChange={e => updateLicense(lic.id, 'type', e.target.value)}
-                            placeholder="e.g. General Contractor"
+                            placeholder="e.g. SC General Contractor"
                             className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:border-[#C9A84C]/50 focus:outline-none" />
                         </div>
                         <div>
                           <label className="block text-[10px] text-white/30 mb-1">License Number</label>
                           <input value={lic.number} onChange={e => updateLicense(lic.id, 'number', e.target.value)}
-                            placeholder="e.g. SC-123456"
+                            placeholder="e.g. GC-123456"
                             className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:border-[#C9A84C]/50 focus:outline-none" />
                         </div>
                         <div>
@@ -321,6 +414,9 @@ export default function CompanyPage() {
           <p className="text-[10px] text-white/15">All info saves directly to your website. NexaVision is notified when you update.</p>
         </div>
       </div>
+
+      {/* License Info Popup */}
+      {showLicenseInfo && <LicenseInfoPopup onClose={() => setShowLicenseInfo(false)} />}
     </div>
   );
 }
