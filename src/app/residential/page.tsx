@@ -225,12 +225,12 @@ export default function ResidentialPage() {
           </>
         )}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-8">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl lg:max-w-5xl">
             <div className="hero-badge inline-flex items-center gap-2 px-5 py-2 border border-ro-gold/25 bg-ro-gold/[0.06] backdrop-blur-sm mb-8">
               <Home size={14} className="text-ro-gold" />
               <span className="text-ro-gold text-xs font-mono tracking-[0.25em] uppercase">Residential Division</span>
             </div>
-            <h1 className="text-ro-white font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight uppercase leading-[0.85] mb-8">
+            <h1 className="text-ro-white font-heading text-5xl sm:text-6xl md:text-7xl lg:text-[9rem] xl:text-[10rem] tracking-tight uppercase leading-[0.82] mb-8">
               Your Home.<br />
               <span className="gradient-text-gold">Your Vision.</span><br />
               <span className="text-ro-white/90">Built by Hands</span><br />
@@ -238,7 +238,7 @@ export default function ResidentialPage() {
             </h1>
 
             <div className="hero-gold-line w-32 h-[2px] bg-gradient-to-r from-ro-gold/80 via-ro-gold-light/60 to-transparent mb-8" />
-            <p className="hero-desc text-ro-gray-300 text-lg sm:text-xl leading-[1.8] mb-10 max-w-xl">
+            <p className="hero-desc text-ro-gray-300 text-lg sm:text-xl lg:text-2xl leading-[1.8] mb-10 max-w-xl lg:max-w-2xl">
               Custom homes, complex framing, luxury renovations — designed around your life and built to last generations.
             </p>
             <div className="hero-btns flex flex-wrap gap-4">

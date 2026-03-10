@@ -241,17 +241,17 @@ export default function CommercialPage() {
           </>
         )}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-8">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl lg:max-w-5xl">
             <div className="hero-badge inline-flex items-center gap-2 px-5 py-2 border border-ro-gold/30 bg-ro-gold/5 backdrop-blur-sm mb-8">
               <Building2 size={14} className="text-ro-gold" />
               <span className="text-ro-gold text-xs font-mono tracking-[0.25em] uppercase">Commercial Division</span>
             </div>
-            <h1 className="text-ro-white font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight uppercase leading-[0.85] mb-8">
+            <h1 className="text-ro-white font-heading text-5xl sm:text-6xl md:text-7xl lg:text-[9rem] xl:text-[11rem] tracking-tight uppercase leading-[0.82] mb-8">
               Commercial<br /><span className="gradient-text-gold">Grade.</span><br />
               <span className="text-ro-white/90">Unlimited</span><br /><span className="gradient-text-gold">Scale.</span>
             </h1>
             <div className="hero-gold-line w-32 h-[2px] bg-gradient-to-r from-ro-gold via-ro-gold-light to-transparent mb-8" />
-            <p className="hero-desc text-ro-gray-300 text-lg sm:text-xl leading-relaxed mb-10 max-w-xl">
+            <p className="hero-desc text-ro-gray-300 text-lg sm:text-xl lg:text-2xl leading-relaxed mb-10 max-w-xl lg:max-w-2xl">
               Steel builds, retail storefronts, mixed-material construction, and full commercial development. One company — ground up.
             </p>
             <div className="hero-btns flex flex-wrap gap-4">
@@ -284,13 +284,14 @@ export default function CommercialPage() {
         <div className="absolute inset-0 blueprint-overlay opacity-20" />
         <div className="absolute inset-0 bg-gradient-to-b from-ro-black via-ro-black/98 to-ro-black" />
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="section-head mb-20">
-            <span className="text-ro-gold text-xs font-mono tracking-[0.4em] uppercase block mb-4">Capabilities</span>
-            <h2 className="text-ro-white font-heading text-4xl sm:text-5xl lg:text-6xl tracking-tight uppercase leading-[0.9]">
-              Full Commercial<br /><span className="gradient-text-gold">Service Scope</span>
-            </h2>
-            <div className="w-20 h-[2px] bg-gradient-to-r from-ro-gold to-transparent mt-6" />
-          </div>
+          <div className="lg:grid lg:grid-cols-[1fr_2fr] lg:gap-16 lg:items-start mb-20">
+            <div className="section-head mb-12 lg:mb-0 lg:sticky lg:top-32">
+              <span className="text-ro-gold text-xs font-mono tracking-[0.4em] uppercase block mb-4">Capabilities</span>
+              <h2 className="text-ro-white font-heading text-4xl sm:text-5xl lg:text-6xl tracking-tight uppercase leading-[0.9]">
+                Full Commercial<br /><span className="gradient-text-gold">Service Scope</span>
+              </h2>
+              <div className="w-20 h-[2px] bg-gradient-to-r from-ro-gold to-transparent mt-6" />
+            </div>
           <div className="space-y-4 sm:space-y-6">
             {division.services.map((service, i) => (
               <button key={service} onClick={() => openServiceDrawer(service)}
@@ -314,6 +315,7 @@ export default function CommercialPage() {
                 </div>
               </button>
             ))}
+          </div>
           </div>
         </div>
       </section>
