@@ -7,8 +7,9 @@ export const COMPANY = {
   heroStatement: 'From Land Grading to Luxury Finishes — We Build Everything from the Ground Up.',
   cta: 'Send us your project — let us make it a reality.',
   experience: '25+',
-  serviceArea: 'Upstate South Carolina',
+  serviceArea: 'Georgia, South Carolina & North Carolina',
   areaCode: '864',
+  serviceAreaShort: 'Tri-State (GA, SC, NC)',
   facebook: 'https://www.facebook.com/profile.php?id=61578630061375',
 } as const;
 
@@ -52,5 +53,5 @@ export const TRUST_STATS = [
   { value: '25+', label: 'Years Experience' },
   { value: '500+', label: 'Projects Completed' },
   { value: '100%', label: 'Client Satisfaction' },
-  { value: '864', label: 'Upstate SC Strong' },
+  { value: '3', label: 'State Service Area' },
 ] as const;
