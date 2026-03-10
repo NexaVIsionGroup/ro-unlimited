@@ -54,87 +54,119 @@ export default function Hero({ heroVideoUrl }: HeroProps) {
     const mm = gsap.matchMedia();
 
     // ═══════════════════════════════════════════════════════
-    // DESKTOP — Scrub-linked, starts invisible, reveals on scroll
-    // Everything hidden initially; ScrollTrigger handles reveal
+    // DESKTOP — Same entrance sequence as mobile:
+    // ROLoader splash → video plays 2s → build sequence fires
     // ═══════════════════════════════════════════════════════
     mm.add(MEDIA_QUERIES.desktop, () => {
-      if (!spacerRef.current) return;
-
-      gsap.set([badgeRef.current, line1Ref.current, line2Ref.current, line3Ref.current,
-        goldLineRef.current, descRef.current, statsRef.current], { opacity: 0 });
+      // Hide everything initially
+      gsap.set([badgeRef.current, line2Ref.current, goldLineRef.current], { opacity: 0 });
       if (ctaRef.current?.children.length) {
         gsap.set(ctaRef.current.children, { opacity: 0 });
       }
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: spacerRef.current,
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: 0.5,
-          id: 'hero-build',
-        },
-      });
+      // SplitText mask reveal
+      const split3 = SplitText.create(line3Ref.current!, { type: 'chars', mask: 'chars' });
+      const split1 = SplitText.create(line1Ref.current!, { type: 'chars', mask: 'chars' });
+      gsap.set([split3.chars, split1.chars], { y: '110%', willChange: 'transform' });
 
-      // BUILD FROM THE GROUND UP — bottom first
+      const splitDesc = SplitText.create(descRef.current!, { type: 'lines', mask: 'lines' });
+      gsap.set(splitDesc.lines, { y: '100%' });
 
-      // 0.00 — 0.06: Stats rise from below — FOUNDATION POURED
-      tl.fromTo(statsRef.current,
-        { clipPath: 'inset(100% 0% 0% 0%)', y: 40, opacity: 0 },
-        { clipPath: 'inset(0% 0% 0% 0%)', y: 0, opacity: 1, duration: 0.06, ease: 'power3.out' },
-        0
-      );
+      // Build PAUSED — played by handleVideoReady
+      const tl = gsap.timeline({ paused: true });
+      mobileTlRef.current = tl;
+      tlReadyRef.current = true;
 
-      // 0.06 — 0.13: CTA buttons bolt in — STRUCTURAL STEEL FRAMING
-      if (ctaRef.current?.children.length) {
-        tl.fromTo(ctaRef.current.children,
-          { scale: 0, rotation: 180, opacity: 0 },
-          { scale: 1, rotation: 0, opacity: 1, duration: 0.07, stagger: 0.02, ease: 'back.out(2)' },
-          0.06
+      // 1. Phone number — slides in from right
+      if (ctaRef.current?.children[1]) {
+        tl.fromTo(ctaRef.current.children[1],
+          { x: 60, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.45, ease: 'power3.out' },
+          0
         );
       }
 
-      // 0.13 — 0.20: Description pours in — WALLS RISING
-      tl.fromTo(descRef.current,
-        { clipPath: 'inset(100% 0% 0% 0%)', y: 20, opacity: 0 },
-        { clipPath: 'inset(0% 0% 0% 0%)', y: 0, opacity: 1, duration: 0.07, ease: 'power2.out' },
-        0.13
+      // 2. Gold CTA — steel beam wipe from left
+      if (ctaRef.current?.children[0]) {
+        tl.fromTo(ctaRef.current.children[0],
+          { clipPath: 'inset(0 100% 0 0)', opacity: 0 },
+          { clipPath: 'inset(0 0% 0 0)', opacity: 1, duration: 0.5, ease: 'power3.inOut' },
+          0.15
+        );
+      }
+
+      // 3. Description — lines rise from behind masks
+      tl.fromTo(splitDesc.lines,
+        { y: '100%' },
+        { y: '0%', stagger: 0.08, duration: 0.5, ease: 'power3.out' },
+        0.5
       );
 
-      // 0.20 — 0.26: Gold weld line draws — STRUCTURAL CONNECTOR
+      // 4. Gold weld line draws across
       tl.fromTo(goldLineRef.current,
         { scaleX: 0, opacity: 0, transformOrigin: 'left center' },
-        { scaleX: 1, opacity: 1, duration: 0.06, ease: 'power2.inOut' },
-        0.20
+        { scaleX: 1, opacity: 1, duration: 0.35, ease: 'power2.inOut' },
+        0.65
       );
 
-      // 0.26 — 0.36: "FROM THE GROUND UP" rises via clipPath
-      tl.fromTo(line3Ref.current,
-        { clipPath: 'inset(100% 0% 0% 0%)', y: 40, opacity: 0 },
-        { clipPath: 'inset(0% 0% 0% 0%)', y: 0, opacity: 1, duration: 0.10, ease: 'power3.out' },
-        0.26
+      // 5. "FROM THE GROUND UP" — chars rise from below
+      tl.fromTo(split3.chars,
+        { y: '110%' },
+        { y: '0%', stagger: 0.02, duration: 0.45, ease: 'back.out(1.2)' },
+        0.9
       );
 
-      // 0.36 — 0.46: "EVERYTHING" scales up from center
+      // 6. "EVERYTHING" — scale punch from center
       tl.fromTo(line2Ref.current,
-        { scale: 0.2, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.10, ease: 'back.out(1.5)' },
-        0.36
+        { scale: 0.3, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(2)' },
+        1.3
       );
 
-      // 0.46 — 0.57: "WE BUILD" drops like top beam — PLACED LAST
-      tl.fromTo(line1Ref.current,
-        { y: -100, rotation: -3, opacity: 0 },
-        { y: 0, rotation: 0, opacity: 1, duration: 0.11, ease: 'bounce.out' },
-        0.46
+      // 7. "WE BUILD" — chars drop from above, center-out stagger
+      tl.fromTo(split1.chars,
+        { y: '-110%' },
+        { y: '0%', stagger: { each: 0.025, from: 'center' }, duration: 0.45, ease: 'back.out(1.5)' },
+        1.5
       );
 
-      // 0.57 — 0.65: Badge bolts on — FINAL SIGN AT TOP
+      // 8. Badge — drops in from top
       tl.fromTo(badgeRef.current,
-        { scale: 0, rotation: 90, opacity: 0 },
-        { scale: 1, rotation: 0, opacity: 1, duration: 0.08, ease: 'back.out(2)' },
-        0.57
+        { y: -20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.35, ease: 'power2.out' },
+        1.9
       );
+
+      tl.call(() => {
+        gsap.set([split3.chars, split1.chars], { willChange: 'auto' });
+      });
+
+      // If video already fired before tl was ready, play now
+      if (videoFiredRef.current) {
+        tl.play();
+      }
+
+      // Stats: same concrete pour as mobile
+      if (statsRef.current?.children.length) {
+        const statEls = Array.from(statsRef.current.children) as HTMLElement[];
+        gsap.set(statEls, { scaleY: 0, transformOrigin: 'center bottom', opacity: 0 });
+        gsap.fromTo(statEls,
+          { scaleY: 0, opacity: 0, transformOrigin: 'center bottom' },
+          {
+            scaleY: 1, opacity: 1,
+            duration: 0.5, ease: 'power3.out',
+            stagger: { each: 0.1, from: 'edges' },
+            scrollTrigger: {
+              trigger: statsRef.current,
+              start: 'top 85%',
+              toggleActions: 'play none none none',
+              id: 'hero-stats-desktop',
+            },
+          }
+        );
+      }
+
+      return () => { split1.revert(); split3.revert(); splitDesc.revert(); };
     });
 
     // ═══════════════════════════════════════════════════════
@@ -262,8 +294,8 @@ export default function Hero({ heroVideoUrl }: HeroProps) {
   };
 
   return (
-    <div ref={spacerRef} className="relative lg:z-[40] lg:[height:400vh]">
-      <section ref={sectionRef} className="min-h-screen lg:sticky lg:top-0 lg:h-screen flex items-center justify-start lg:justify-center overflow-hidden bg-ro-black pt-20">
+    <div ref={spacerRef} className="relative">
+      <section ref={sectionRef} className="min-h-screen flex items-center justify-start lg:justify-center overflow-hidden bg-ro-black pt-20">
 
         {/* Blueprint grid */}
         <BlueprintGrid intensity="low" animate={true} />
